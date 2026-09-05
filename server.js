@@ -80,5 +80,5 @@ app.use(function (error, req, res, next) {
 });
 
 app.listen(port, function () {
-    console.log('Placement Trainer running at http://localhost:' + port);
+    console.log('Skill Pilot running at http://localhost:' + port);
 });

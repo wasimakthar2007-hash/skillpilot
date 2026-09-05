@@ -28,7 +28,7 @@
     const header = document.createElement('header');
     header.innerHTML =
         '<div class="header-start"><button type="button" class="back-btn" id="back-btn" aria-label="Go back">←</button>' +
-        '<h1><a href="index.html" class="brand-link">Placement Trainer</a></h1></div>' +
+        '<h1><a href="index.html" class="brand-link"><img src="assets/skill-pilot-logo.png" alt="" class="brand-logo"> <span>Skill Pilot</span></a></h1></div>' +
         '<nav>' + navHtml +
         (session && session.role === 'admin' ? '<a href="profile.html" class="nav-link">Profile</a>' : '<a href="profile.html" class="nav-link">Profile</a>') +
         '<button type="button" class="nav-btn" id="logout-btn">Log out</button></nav>';
