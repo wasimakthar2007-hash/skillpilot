@@ -15,6 +15,23 @@ const aiLimiter = rateLimit({ windowMs: 60 * 1000, limit: 20, standardHeaders: t
 app.use(express.json({ limit: '32kb' }));
 app.use(express.static(__dirname));
 
+const jobs = [
+    { title: 'Junior Frontend Developer', company: 'BrightLayer Technologies', location: 'Bengaluru', experience: '0-2 years', type: 'Full-time', skills: ['JavaScript', 'HTML/CSS', 'React'], description: 'Build accessible product experiences with a collaborative product team.', applyUrl: 'https://www.linkedin.com/jobs/search/?keywords=junior%20frontend%20developer' },
+    { title: 'Graduate Software Engineer', company: 'Northstar Labs', location: 'Hyderabad', experience: '0-1 years', type: 'Full-time', skills: ['Java', 'SQL', 'Git'], description: 'Join a graduate engineering programme working on reliable backend services.', applyUrl: 'https://www.linkedin.com/jobs/search/?keywords=graduate%20software%20engineer' },
+    { title: 'QA Automation Engineer', company: 'CloudForge', location: 'Remote', experience: '1-3 years', type: 'Full-time', skills: ['JavaScript', 'Playwright', 'CI/CD'], description: 'Create dependable automated tests for a fast-moving cloud platform.', applyUrl: 'https://www.linkedin.com/jobs/search/?keywords=qa%20automation%20engineer' },
+    { title: 'Data Analyst Intern', company: 'InsightWorks', location: 'Pune', experience: '0-1 years', type: 'Internship', skills: ['Python', 'SQL', 'Excel'], description: 'Turn product and business data into clear decisions for internal teams.', applyUrl: 'https://www.linkedin.com/jobs/search/?keywords=data%20analyst%20intern' },
+    { title: 'Backend Developer', company: 'Vertex Systems', location: 'Chennai', experience: '1-3 years', type: 'Full-time', skills: ['Node.js', 'Express', 'PostgreSQL'], description: 'Design APIs and services that power customer-facing applications.', applyUrl: 'https://www.linkedin.com/jobs/search/?keywords=backend%20developer' },
+    { title: 'Cloud Support Associate', company: 'AzureBridge', location: 'Noida', experience: '0-2 years', type: 'Full-time', skills: ['Azure', 'Linux', 'Networking'], description: 'Help teams troubleshoot cloud workloads and build reliable operations.', applyUrl: 'https://www.linkedin.com/jobs/search/?keywords=cloud%20support%20associate' },
+    { title: 'UI/UX Designer', company: 'PixelCraft Studio', location: 'Mumbai', experience: '1-3 years', type: 'Full-time', skills: ['Figma', 'Research', 'Prototyping'], description: 'Create thoughtful user experiences for learning and productivity products.', applyUrl: 'https://www.linkedin.com/jobs/search/?keywords=ui%20ux%20designer' },
+    { title: 'Product Management Intern', company: 'Launchpad Digital', location: 'Remote', experience: '0-1 years', type: 'Internship', skills: ['Research', 'Roadmaps', 'Communication'], description: 'Support product discovery, customer research, and roadmap planning.', applyUrl: 'https://www.linkedin.com/jobs/search/?keywords=product%20management%20intern' },
+    { title: 'DevOps Engineer', company: 'StackWorks', location: 'Bengaluru', experience: '2-5 years', type: 'Full-time', skills: ['Docker', 'Kubernetes', 'CI/CD'], description: 'Improve deployment automation and platform reliability for engineering teams.', applyUrl: 'https://www.linkedin.com/jobs/search/?keywords=devops%20engineer' },
+    { title: 'Business Analyst', company: 'GrowthPath Consulting', location: 'Gurugram', experience: '1-3 years', type: 'Full-time', skills: ['Excel', 'SQL', 'Communication'], description: 'Translate business needs into clear requirements and measurable outcomes.', applyUrl: 'https://www.linkedin.com/jobs/search/?keywords=business%20analyst' }
+];
+
+app.get('/api/jobs', function (req, res) {
+    res.json({ jobs: jobs });
+});
+
 async function askGoogle(prompt) {
     if (!process.env.GOOGLE_AI_API_KEY) throw new Error('GOOGLE_AI_API_KEY is not configured on the server.');
     const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(process.env.GOOGLE_AI_API_KEY), {

@@ -21,7 +21,11 @@
     document.getElementById('profile-answered').textContent = scores.reduce(function (sum, item) { return sum + item.total; }, 0);
     const average = scores.length ? Math.round(scores.reduce(function (sum, item) { return sum + (item.score / item.total) * 100; }, 0) / scores.length) : 0;
     document.getElementById('profile-average').textContent = average + '%';
-    document.getElementById('profile-logout').addEventListener('click', function () { PTAuth.logout(); window.location.replace('login.html'); });
+    document.getElementById('profile-logout').addEventListener('click', function (event) {
+        event.currentTarget.disabled = true;
+        PTAuth.logout();
+        window.location.replace('login.html');
+    });
 })();
 </script>
 </body></html>

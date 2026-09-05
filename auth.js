@@ -112,6 +112,7 @@
     function logout() {
         sessionStorage.removeItem(SESSION_KEY);
         localStorage.removeItem(SESSION_KEY);
+        localStorage.removeItem(REMEMBER_KEY);
     }
 
     function guard() {

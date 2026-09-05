@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job vacancies — Skill Pilot</title>
+    <link rel="icon" type="image/png" href="assets/skill-pilot-logo.png">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="jobs">
+<main>
+    <section class="page-panel jobs-panel">
+        <p class="eyebrow">CAREER OPPORTUNITIES</p>
+        <h2>Find your next opportunity</h2>
+        <p class="hero-text">Openings are matched against your current role. Use the filters to focus your search.</p>
+        <div class="jobs-summary">
+            <strong id="current-role">Current role: loading…</strong>
+            <span id="job-count" class="track-count"></span>
+        </div>
+        <form id="job-filters" class="job-filters">
+            <label>Search<input id="job-search" type="search" placeholder="Role, skill, or company"></label>
+            <label>Location<select id="job-location"><option value="">All locations</option></select></label>
+            <label>Experience<select id="job-experience"><option value="">Any experience</option></select></label>
+        </form>
+        <p id="jobs-message" class="form-message" role="status"></p>
+        <div id="job-list" class="job-list" aria-live="polite"></div>
+    </section>
+</main>
+<script src="auth.js"></script>
+<script src="shared-nav.js"></script>
+<script src="jobs.js"></script>
+</body>
+</html>

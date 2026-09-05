@@ -1,18 +1,19 @@
 /**
  * Injects a consistent header/nav on every page.
- * Set data-page on <body>: home | aptitude | career | admin | dsa | mentor | resume
+ * Set data-page on <body>: home | aptitude | career | admin | dsa | mentor | resume | jobs
  */
 (function () {
     if (window.PTAuth && !PTAuth.guard()) return;
     const page = document.body.getAttribute('data-page') || 'home';
 
     const session = window.PTAuth ? PTAuth.getSession() : null;
-    const links = [
+    const links = page === 'home' ? [] : [
         { id: 'home', href: 'index.html', label: 'Home' },
         { id: 'aptitude', href: 'aptitude.html', label: 'Aptitude' },
         { id: 'career', href: 'career-resources.html', label: 'Career Resources' },
         { id: 'mentor', href: 'ai-mentor.html', label: 'AI Mentor' },
-        { id: 'resume', href: 'resume-builder.html', label: 'Resume Builder' }
+        { id: 'resume', href: 'resume-builder.html', label: 'Resume Builder' },
+        { id: 'jobs', href: 'jobs.html', label: 'Jobs' }
     ];
     if (session && session.role === 'admin') {
         links.push({ id: 'admin', href: 'admin.html', label: 'Admin' });
@@ -30,7 +31,7 @@
         '<div class="header-start"><button type="button" class="back-btn" id="back-btn" aria-label="Go back">←</button>' +
         '<h1><a href="index.html" class="brand-link"><img src="assets/skill-pilot-logo.png" alt="" class="brand-logo"> <span>Skill Pilot</span></a></h1></div>' +
         '<nav>' + navHtml +
-        (session && session.role === 'admin' ? '<a href="profile.html" class="nav-link">Profile</a>' : '<a href="profile.html" class="nav-link">Profile</a>') +
+        '<a href="profile.html" class="nav-link">Profile</a>' +
         '<button type="button" class="nav-btn" id="logout-btn">Log out</button></nav>';
 
     document.body.insertBefore(header, document.body.firstChild);
@@ -38,7 +39,8 @@
         if (window.history.length > 1) window.history.back();
         else window.location.href = 'index.html';
     });
-    document.getElementById('logout-btn').addEventListener('click', function () {
+    document.getElementById('logout-btn').addEventListener('click', function (event) {
+        event.currentTarget.disabled = true;
         PTAuth.logout();
         window.location.replace('login.html');
     });
