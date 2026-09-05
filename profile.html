@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Profile — Placement Trainer</title><link rel="stylesheet" href="styles.css"></head>
+<body data-page="profile">
+<main><section class="page-panel profile-panel">
+    <p class="eyebrow">ACCOUNT CENTER</p><h2>Your profile</h2><p class="hero-text">Manage your account and keep your preparation private and consistent.</p>
+    <div class="profile-card"><div class="avatar" id="avatar">PT</div><div><h3 id="profile-name">—</h3><p id="profile-email">—</p><span class="role-pill" id="profile-role">USER</span></div></div>
+    <div class="stats-row"><div class="stat-card"><div class="stat-label">Practice sessions</div><div class="stat-value" id="profile-sessions">0</div></div><div class="stat-card"><div class="stat-label">Questions answered</div><div class="stat-value" id="profile-answered">0</div></div><div class="stat-card"><div class="stat-label">Average score</div><div class="stat-value" id="profile-average">0%</div></div></div>
+    <div class="resource-section profile-security"><h3>Session security</h3><p class="hero-text">Your session expires automatically. Sign out on shared devices.</p><button class="danger-btn" id="profile-logout" type="button">Sign out everywhere</button></div>
+</section></main>
+<script src="auth.js"></script><script src="shared-nav.js"></script>
+<script>
+(function () {
+    const session = PTAuth.getSession(); if (!session) return;
+    document.getElementById('profile-name').textContent = session.username;
+    document.getElementById('profile-email').textContent = session.email;
+    document.getElementById('profile-role').textContent = session.role.toUpperCase();
+    document.getElementById('avatar').textContent = session.username.slice(0, 2).toUpperCase();
+    const scores = JSON.parse(localStorage.getItem('pt_aptitude_scores') || '[]');
+    document.getElementById('profile-sessions').textContent = scores.length;
+    document.getElementById('profile-answered').textContent = scores.reduce(function (sum, item) { return sum + item.total; }, 0);
+    const average = scores.length ? Math.round(scores.reduce(function (sum, item) { return sum + (item.score / item.total) * 100; }, 0) / scores.length) : 0;
+    document.getElementById('profile-average').textContent = average + '%';
+    document.getElementById('profile-logout').addEventListener('click', function () { PTAuth.logout(); window.location.replace('login.html'); });
+})();
+</script>
+</body></html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard — Placement Trainer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="admin">
+    <main>
+        <section class="page-panel admin-dashboard">
+            <div class="admin-hero">
+                <div>
+                    <p class="eyebrow">CONTROL CENTER</p>
+                    <h2>Admin dashboard</h2>
+                    <p class="hero-text">Monitor the training experience. Aptitude tests are generated automatically from the bundled question files.</p>
+                </div>
+                <span class="admin-live-badge"><span></span> Live</span>
+            </div>
+
+            <div class="admin-block">
+                <div class="section-heading">
+                    <div><p class="eyebrow">INSIGHTS</p><h3>Recent aptitude scores</h3></div>
+                </div>
+                <table class="scores-table" id="scores-table">
+                    <thead><tr><th>Date</th><th>Score</th><th>Total</th><th>Result</th></tr></thead>
+                    <tbody id="scores-body"><tr><td colspan="4">No scores yet.</td></tr></tbody>
+                </table>
+            </div>
+
+            <div class="admin-block">
+                <div class="section-heading">
+                    <div><p class="eyebrow">DISTRIBUTION</p><h3>Shareable links</h3></div>
+                </div>
+                <p class="hero-text">Publish learning resources to any page. Each resource can include a topic and a video, PDF, document, Word, or Excel link.</p>
+                <form class="share-form" id="share-form">
+                    <label>Page<select id="share-page"><option value="aptitude">Aptitude</option><option value="dsa">DSA</option><option value="career">Career Resources</option><option value="mentor">AI Mentor</option><option value="resume">Resume Builder</option></select></label>
+                    <label>Topic<input id="share-topic" required placeholder="Arrays and searching"></label>
+                    <label>Resource title<input id="share-title" required placeholder="Complete revision guide"></label>
+                    <label>Resource type<select id="share-type"><option>Video</option><option>PDF</option><option>Document</option><option>Word</option><option>Excel</option><option>Website</option></select></label>
+                    <label>Resource URL<input id="share-url" type="url" required placeholder="https://..."></label>
+                    <button class="primary-btn" type="submit">Publish resource</button>
+                </form>
+                <div id="share-list" class="share-list"><p class="progress-msg">No links generated yet.</p></div>
+            </div>
+        </section>
+    </main>
+    <script src="auth.js"></script>
+    <script src="shared-nav.js"></script>
+    <script src="questions.js"></script>
+    <script src="question-store.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

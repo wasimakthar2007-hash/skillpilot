@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Builder — Placement Trainer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="resume">
+    <main>
+        <section class="page-panel ai-tool">
+            <p class="eyebrow">CAREER READY</p>
+            <h2>Resume Builder</h2>
+            <p class="hero-text">Upload a PDF, DOC, DOCX, or TXT resume and get an actionable improvement plan. Your file is processed by the secure app server.</p>
+            <form id="resume-form" class="tool-form">
+                <label for="resume-file">Resume file<input id="resume-file" type="file" accept=".pdf,.doc,.docx,.txt" required></label>
+                <label for="resume-role">Target role (optional)<input id="resume-role" placeholder="Frontend developer"></label>
+                <button class="primary-btn" type="submit">Analyze resume</button>
+            </form>
+            <p id="resume-status" class="form-message" role="status"></p>
+            <article id="resume-result" class="answer-panel hidden" aria-live="polite"></article>
+        </section>
+    </main>
+    <script src="auth.js"></script><script src="shared-nav.js"></script><script src="resume-builder.js"></script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign in — Placement Trainer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="auth-page">
+    <main class="auth-shell">
+        <section class="auth-card">
+            <div class="auth-brand"><span class="brand-mark">PT</span><span>Placement Trainer</span></div>
+            <p class="eyebrow">WELCOME BACK</p>
+            <h1>Prepare with purpose.</h1>
+            <p class="auth-copy">One focused workspace for aptitude practice, DSA preparation, and career resources.</p>
+            <div class="auth-tabs"><button class="auth-tab active" type="button" data-mode="login">Sign in</button><button class="auth-tab" type="button" data-mode="register">Create account</button></div>
+            <form id="auth-form" novalidate>
+                <label>Username<input id="username" required minlength="3" autocomplete="username"></label>
+                <label id="email-label" class="hidden">Email<input id="email" type="email" autocomplete="email"></label>
+                <label>Password<input id="password" type="password" required minlength="8" autocomplete="current-password"></label>
+                <label id="confirm-label" class="hidden">Confirm password<input id="confirm-password" type="password" minlength="8"></label>
+                <div class="auth-options"><label class="check-label"><input id="remember" type="checkbox"> Remember me</label><button type="button" class="text-btn" id="forgot-password">Forgot password?</button></div>
+                <button class="primary-btn full-btn" type="submit" id="auth-submit">Sign in</button>
+                <p id="auth-message" class="form-message" role="alert"></p>
+            </form>
+            <p class="demo-note">Demo access: <strong>admin</strong> / <strong>Admin@123</strong></p>
+        </section>
+        <aside class="auth-aside"><span class="aside-badge">LEARN • PRACTICE • PLACE</span><h2>Your next opportunity starts here.</h2><p>Build a steady practice habit with clear learning tracks and instant feedback.</p><div class="mini-stat-row"><span><strong>03</strong><small>learning tracks</small></span><span><strong>24/7</strong><small>self-paced access</small></span></div></aside>
+    </main>
+    <script src="auth.js"></script>
+    <script>
+    (function () {
+        const form = document.getElementById('auth-form'), message = document.getElementById('auth-message'), submit = document.getElementById('auth-submit');
+        let mode = 'login';
+        const ready = PTAuth.ensureDemoAdmin();
+        document.querySelectorAll('.auth-tab').forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                mode = tab.dataset.mode;
+                document.querySelectorAll('.auth-tab').forEach(function (item) { item.classList.toggle('active', item === tab); });
+                document.getElementById('email-label').classList.toggle('hidden', mode === 'login');
+                document.getElementById('confirm-label').classList.toggle('hidden', mode === 'login');
+                document.getElementById('forgot-password').classList.toggle('hidden', mode !== 'login');
+                submit.textContent = mode === 'login' ? 'Sign in' : 'Create account';
+                message.textContent = '';
+            });
+        });
+        form.addEventListener('submit', async function (event) {
+            event.preventDefault(); message.textContent = ''; await ready;
+            const username = document.getElementById('username').value.trim(), password = document.getElementById('password').value;
+            if (username.length < 3 || password.length < 8) { message.textContent = 'Use a username with 3+ characters and a password with 8+ characters.'; return; }
+            if (mode === 'register' && password !== document.getElementById('confirm-password').value) { message.textContent = 'Passwords do not match.'; return; }
+            submit.disabled = true;
+            try {
+                if (mode === 'register') await PTAuth.register(username, document.getElementById('email').value, password);
+                else await PTAuth.login(username, password, document.getElementById('remember').checked);
+                window.location.replace('index.html');
+            } catch (error) { message.textContent = error.message; } finally { submit.disabled = false; }
+        });
+        document.getElementById('forgot-password').addEventListener('click', function () { message.textContent = 'Password reset instructions would be emailed in the production API.'; });
+    })();
+    </script>
+</body>
+</html>
