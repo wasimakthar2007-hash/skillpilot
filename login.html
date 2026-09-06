@@ -11,7 +11,7 @@
     <button type="button" class="auth-back-btn" id="auth-back" aria-label="Go back">← Back</button>
     <main class="auth-shell">
         <section class="auth-card">
-            <div class="auth-brand"><img src="assets/skill-pilot-logo.png" alt="Skill Pilot logo" class="auth-logo"><span>Skill Pilot</span></div>
+            <div class="auth-brand"><img src="assets/skill-pilot-logo.png" alt="Skill Pilot logo" class="auth-logo"><span>Skill Pilot</span><button type="button" class="install-auth-btn hidden" id="install-auth-btn">Install app</button></div>
             <p class="eyebrow">WELCOME BACK</p>
             <h1>Prepare with purpose.</h1>
             <p class="auth-copy">One focused workspace for aptitude practice, DSA preparation, and career resources.</p>
@@ -31,6 +31,7 @@
     </main>
     <footer class="site-footer auth-footer"><span>Skill Pilot</span><span>Prepared by BSc AI Student, New College</span></footer>
     <script src="auth.js"></script>
+    <script src="pwa.js"></script>
     <script>
     (function () {
         document.getElementById('auth-back').addEventListener('click', function () {

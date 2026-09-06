@@ -4,6 +4,15 @@
  */
 (function () {
     if (window.PTAuth && !PTAuth.guard()) return;
+    if (!document.querySelector('link[rel="manifest"]')) {
+        const manifest = document.createElement('link');
+        manifest.rel = 'manifest';
+        manifest.href = 'manifest.webmanifest';
+        document.head.appendChild(manifest);
+    }
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(function () {});
+    }
     const page = document.body.getAttribute('data-page') || 'home';
 
     const session = window.PTAuth ? PTAuth.getSession() : null;
@@ -31,9 +40,27 @@
         '<div class="header-start"><button type="button" class="back-btn" id="back-btn" aria-label="Go back">←</button>' +
         '<h1><a href="index.html" class="brand-link"><img src="assets/skill-pilot-logo.png" alt="" class="brand-logo"> <span>Skill Pilot</span></a></h1></div>' +
         '<nav>' + navHtml +
-        '<a href="profile.html" class="nav-link">Profile</a></nav>';
+        '<a href="profile.html" class="nav-link">Profile</a>' +
+        '<button type="button" class="nav-link install-app-btn hidden" id="install-app-btn">Install app</button></nav>';
 
     document.body.insertBefore(header, document.body.firstChild);
+    let deferredInstallPrompt = null;
+    const installButton = document.getElementById('install-app-btn');
+    window.addEventListener('beforeinstallprompt', function (event) {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        installButton.classList.remove('hidden');
+    });
+    installButton.addEventListener('click', async function () {
+        if (!deferredInstallPrompt) return;
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        installButton.classList.add('hidden');
+    });
+    window.addEventListener('appinstalled', function () {
+        installButton.classList.add('hidden');
+    });
     document.getElementById('back-btn').addEventListener('click', function () {
         if (window.history.length > 1) window.history.back();
         else window.location.href = 'index.html';
