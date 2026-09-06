@@ -1,76 +1,75 @@
 (function () {
-    let currentQuestionIndex = 0;
-    let score = 0;
-    let currentQuestions = [];
+    var currentQuestionIndex = 0;
+    var score = 0;
+    var currentQuestions = [];
+    var currentLevel = 1;
+    var sessionNumber = 1;
 
-    const emptyBank = document.getElementById('empty-bank');
-    const loadingMsg = document.getElementById('loading-msg');
-    const scoreBoard = document.getElementById('score-board');
-    const questionContainer = document.getElementById('question-container');
-    const questionText = document.getElementById('question-text');
-    const optionsContainer = document.getElementById('options-container');
-    const feedback = document.getElementById('feedback');
-    const feedbackText = document.getElementById('feedback-text');
-    const explanationText = document.getElementById('explanation-text');
-    const btnNext = document.getElementById('btn-next');
-    const btnRetry = document.getElementById('btn-retry');
+    var emptyBank = document.getElementById('empty-bank');
+    var loadingMsg = document.getElementById('loading-msg');
+    var scoreBoard = document.getElementById('score-board');
+    var questionContainer = document.getElementById('question-container');
+    var questionText = document.getElementById('question-text');
+    var questionProgress = document.getElementById('question-progress');
+    var optionsContainer = document.getElementById('options-container');
+    var feedback = document.getElementById('feedback');
+    var feedbackText = document.getElementById('feedback-text');
+    var explanationText = document.getElementById('explanation-text');
+    var btnNext = document.getElementById('btn-next');
+    var btnRetry = document.getElementById('btn-retry');
+    var btnNextLevel = document.getElementById('btn-next-level');
+    var courseProgress = document.getElementById('course-progress');
+    var levelLabel = document.getElementById('level-label');
+    var sessionLabel = document.getElementById('session-label');
+    var progressBar = document.getElementById('progress-bar');
+
+    function renderProgress(progress) {
+        var completed = progress.completedLevels.length;
+        levelLabel.textContent = currentLevel > 100 ? 'Course complete' : 'Level ' + currentLevel + ' of 100';
+        sessionLabel.textContent = completed + ' level' + (completed === 1 ? '' : 's') + ' completed';
+        progressBar.style.width = Math.round((completed / 100) * 100) + '%';
+        courseProgress.classList.remove('hidden');
+    }
 
     function showQuestion() {
+        var q = currentQuestions[currentQuestionIndex];
+        if (!q) return;
         feedback.classList.add('hidden');
         feedback.classList.remove('correct-feedback', 'wrong-feedback');
         btnNext.classList.add('hidden');
         optionsContainer.innerHTML = '';
+        questionProgress.textContent = 'Level ' + currentLevel + ' · Question ' + (currentQuestionIndex + 1) + ' of ' + currentQuestions.length + ' · ' + q.topic;
+        questionText.textContent = q.question;
 
-        const q = currentQuestions[currentQuestionIndex];
-        questionText.textContent = 'Q' + (currentQuestionIndex + 1) + '. ' + q.question;
-
-        q.options.forEach(function (opt, index) {
-            if (!opt) return;
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.classList.add('option-btn');
-            btn.textContent = opt;
-            btn.onclick = function () {
-                selectOption(index);
-            };
-            optionsContainer.appendChild(btn);
+        q.options.forEach(function (option, index) {
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'option-btn';
+            button.textContent = option;
+            button.addEventListener('click', function () { selectOption(index); });
+            optionsContainer.appendChild(button);
         });
     }
 
     function selectOption(selectedIndex) {
-        const q = currentQuestions[currentQuestionIndex];
-        const optionBtns = Array.prototype.slice.call(optionsContainer.children);
-
-        optionBtns.forEach(function (btn) {
-            btn.disabled = true;
-        });
-
-        const indexByBtn = [];
-        q.options.forEach(function (opt, idx) {
-            if (opt) indexByBtn.push(idx);
-        });
-
-        const selectedBtnPos = indexByBtn.indexOf(selectedIndex);
-        const answerBtnPos = indexByBtn.indexOf(q.answer);
-
+        var q = currentQuestions[currentQuestionIndex];
+        var buttons = Array.prototype.slice.call(optionsContainer.children);
+        buttons.forEach(function (button) { button.disabled = true; });
         if (selectedIndex === q.answer) {
-            if (selectedBtnPos !== -1) optionBtns[selectedBtnPos].classList.add('correct');
+            buttons[selectedIndex].classList.add('correct');
             score++;
             feedbackText.textContent = 'Correct!';
-            feedbackText.style.color = '#155724';
             feedback.classList.add('correct-feedback');
         } else {
-            if (selectedBtnPos !== -1) optionBtns[selectedBtnPos].classList.add('wrong');
-            if (answerBtnPos !== -1) optionBtns[answerBtnPos].classList.add('correct');
+            buttons[selectedIndex].classList.add('wrong');
+            buttons[q.answer].classList.add('correct');
             feedbackText.textContent = 'Incorrect.';
-            feedbackText.style.color = '#721c24';
             feedback.classList.add('wrong-feedback');
         }
-
-        explanationText.textContent =
-            'Explanation: ' + (q.explanation || 'No explanation provided.');
+        explanationText.textContent = 'Explanation: ' + (q.explanation || 'No explanation provided.');
         feedback.classList.remove('hidden');
         btnNext.classList.remove('hidden');
+        QuestionStore.saveSessionState(currentLevel, currentQuestionIndex + 1, score);
     }
 
     function nextQuestion() {
@@ -87,61 +86,54 @@
         scoreBoard.classList.remove('hidden');
         document.getElementById('score').textContent = score;
         document.getElementById('total-questions').textContent = currentQuestions.length;
-        QuestionStore.saveScore({ score: score, total: currentQuestions.length });
-        sessionStorage.removeItem('pt_active_test');
+        QuestionStore.saveScore({
+            score: score,
+            total: currentQuestions.length,
+            level: currentLevel,
+            sessionNumber: sessionNumber,
+            questionStart: (currentLevel - 1) * 10
+        });
+        renderProgress(QuestionStore.getProgress());
+        document.getElementById('quiz-title').textContent =
+            currentLevel < 100 ? 'Level ' + currentLevel + ' complete!' : 'Course complete!';
+        if (currentLevel < 100) {
+            btnNextLevel.textContent = 'Continue to Level ' + (currentLevel + 1);
+            btnNextLevel.classList.remove('hidden');
+        } else {
+            btnNextLevel.classList.add('hidden');
+        }
     }
 
     async function startQuiz() {
         emptyBank.classList.add('hidden');
         scoreBoard.classList.add('hidden');
+        btnNextLevel.classList.add('hidden');
         questionContainer.classList.add('hidden');
         loadingMsg.classList.remove('hidden');
-
-        currentQuestionIndex = 0;
-        score = 0;
-        currentQuestions = [];
-
         try {
-            const count = await QuestionStore.getCount();
-            if (count === 0) {
-                loadingMsg.classList.add('hidden');
-                emptyBank.classList.remove('hidden');
-                return;
-            }
-
-            const settings = QuestionStore.getSettings();
-            currentQuestions = await QuestionStore.getRandomQuestions(
-                settings.questionsPerSession,
-                settings.shuffle
-            );
-            sessionStorage.setItem('pt_active_test', JSON.stringify({
-                token: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-                category: 'Aptitude',
-                questionCount: currentQuestions.length,
-                startedAt: new Date().toISOString()
-            }));
-
+            var progress = QuestionStore.getProgress();
+            currentLevel = Math.max(1, Math.min(progress.currentLevel, 100));
+            sessionNumber = progress.completedSessions + 1;
+            currentQuestionIndex = currentLevel === progress.currentLevel ? progress.currentQuestionIndex : 0;
+            score = currentLevel === progress.currentLevel ? progress.currentScore : 0;
+            renderProgress(progress);
+            currentQuestions = await QuestionStore.getLevelQuestions(currentLevel);
+            if (!currentQuestions.length) throw new Error('No questions are available for this level.');
+            currentQuestionIndex = Math.min(currentQuestionIndex, currentQuestions.length - 1);
             loadingMsg.classList.add('hidden');
-
-            if (!currentQuestions.length) {
-                emptyBank.classList.remove('hidden');
-                return;
-            }
-
             questionContainer.classList.remove('hidden');
             showQuestion();
-        } catch (err) {
+        } catch (error) {
             loadingMsg.classList.add('hidden');
             emptyBank.classList.remove('hidden');
-            emptyBank.innerHTML =
-                '<p>Could not load questions.</p><p>' +
-                (err && err.message ? err.message : String(err)) +
-                '</p><p><a href="index.html">Return home</a></p>';
+            emptyBank.innerHTML = '<p>Could not load questions.</p><p>' +
+                (error && error.message ? error.message : String(error)) +
+                '</p><p>Make sure the page is opened through the local server.</p>';
         }
     }
 
     btnNext.addEventListener('click', nextQuestion);
     btnRetry.addEventListener('click', startQuiz);
-
+    btnNextLevel.addEventListener('click', startQuiz);
     startQuiz();
 })();

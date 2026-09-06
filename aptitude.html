@@ -10,7 +10,14 @@
 <body data-page="aptitude">
     <main>
         <section class="page-panel">
+            <p class="eyebrow">100 LEVEL COURSE</p>
             <h2 id="quiz-title">Aptitude Training &amp; Testing</h2>
+            <p class="hero-text">Complete 10 focused questions per level. Your level, score, and exact resume point are saved automatically.</p>
+
+            <div id="course-progress" class="course-progress hidden">
+                <div><strong id="level-label">Level 1 of 100</strong><span id="session-label">0 levels completed</span></div>
+                <div class="progress-track"><span id="progress-bar"></span></div>
+            </div>
 
             <div id="empty-bank" class="empty-state hidden">
                 <p>The aptitude question bank is unavailable.</p>
@@ -23,10 +30,12 @@
                 <h3>Quiz Completed!</h3>
                 <p>Your Score: <strong><span id="score">0</span> / <span id="total-questions">0</span></strong></p>
                 <button type="button" class="primary-btn" id="btn-retry">Try Again</button>
+                <button type="button" class="primary-btn hidden" id="btn-next-level">Continue to next level</button>
                 <a class="primary-btn" href="index.html">Go to Home</a>
             </div>
 
             <div id="question-container" class="hidden">
+                <p class="question-meta" id="question-progress"></p>
                 <h3 id="question-text">Question text goes here</h3>
                 <div id="options-container"></div>
                 <div id="feedback" class="hidden">
@@ -39,7 +48,6 @@
     </main>
     <script src="auth.js"></script>
     <script src="shared-nav.js"></script>
-    <script src="questions.js"></script>
     <script src="question-store.js"></script>
     <script src="aptitude.js"></script>
 </body>

@@ -9,35 +9,60 @@
 </head>
 <body data-page="dsa">
     <main>
-        <section id="quiz-section" class="page-panel section active">
-            <h2 id="quiz-title">DSA Training &amp; Testing</h2>
-            <div id="loading-msg" class="hidden">Loading DSA questions... please wait.</div>
-
-            <div id="score-board" class="hidden">
-                <h3>Quiz Completed!</h3>
-                <p>Your Score: <strong><span id="score">0</span> / <span id="total-questions">0</span></strong></p>
-                <a class="primary-btn" href="index.html">Go to Home</a>
+        <section class="page-panel section">
+            <p class="eyebrow">100 LEVEL COURSE</p>
+            <h2 id="quiz-title">DSA Training</h2>
+            <p class="hero-text">Build strong data-structure and algorithm fundamentals with 10 focused questions per level. Your progress is saved automatically.</p>
+            <div id="course-progress" class="course-progress hidden">
+                <div><strong id="level-label">Level 1 of 100</strong><span id="session-label">0 levels completed</span></div>
+                <div class="progress-track"><span id="progress-bar"></span></div>
             </div>
-
+            <div class="btn-row dsa-mode-switch">
+                <button type="button" class="primary-btn" id="btn-practice-mode">Study mode</button>
+                <button type="button" class="option-btn" id="btn-tester-mode">Start level tester</button>
+            </div>
+            <div id="loading-msg" class="loading-msg">Loading DSA questions...</div>
+            <div id="empty-bank" class="empty-state hidden"></div>
+            <div id="score-board" class="hidden">
+                <h3 id="dsa-completion-title">Level 1 completed!</h3>
+                <p>You marked <strong><span id="score">0</span> / <span id="total-questions">10</span></strong> prompts as understood.</p>
+                <button type="button" class="primary-btn" id="btn-next-level">Continue to next level</button>
+            </div>
             <div id="question-container" class="hidden">
-                <h3 id="question-text">Question text goes here</h3>
-                <div id="options-container"></div>
+                <p class="question-meta" id="question-progress"></p>
+                <h3 id="question-text"></h3>
+                <button type="button" class="primary-btn" id="btn-show-answer">Show explanation</button>
                 <div id="feedback" class="hidden">
-                    <p id="feedback-text"></p>
                     <p id="explanation-text"></p>
                 </div>
-                <button id="btn-next" class="primary-btn hidden" onclick="nextQuestion()">Next Question</button>
+                <div id="self-check" class="hidden">
+                        <p class="question-meta">Did this explanation help?</p>
+                    <button type="button" class="option-btn" id="btn-understood">Yes, I understand</button>
+                    <button type="button" class="option-btn" id="btn-review">Review again</button>
+                </div>
+                <button type="button" id="btn-next" class="primary-btn hidden">Next Question</button>
+            </div>
+            <div id="tester-container" class="hidden">
+                <p class="question-meta" id="tester-progress"></p>
+                <h3 id="tester-question"></h3>
+                <div id="tester-options" class="tester-options"></div>
+                <button type="button" class="primary-btn hidden" id="btn-submit-tester">Check answer</button>
+                <div id="tester-feedback" class="hidden">
+                    <p id="tester-result"></p>
+                    <p id="tester-expected"></p>
+                </div>
+                <button type="button" class="primary-btn hidden" id="btn-next-tester">Next tester question</button>
+            </div>
+            <div id="tester-score-board" class="hidden">
+                <h3>Tester completed!</h3>
+                <p>Your self-check score: <strong><span id="tester-score">0</span> / 10</strong></p>
+                <button type="button" class="primary-btn" id="btn-retry-tester">Retake this level</button>
             </div>
         </section>
     </main>
     <script src="auth.js"></script>
     <script src="shared-nav.js"></script>
-    <script src="questions.js"></script>
-    <script src="app.js"></script>
-    <script>
-        if (typeof startCategory === 'function') {
-            startCategory('dsa');
-        }
-    </script>
+    <script src="dsa-store.js"></script>
+    <script src="dsa.js"></script>
 </body>
 </html>

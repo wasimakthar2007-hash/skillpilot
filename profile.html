@@ -5,26 +5,75 @@
 <main><section class="page-panel profile-panel">
     <p class="eyebrow">ACCOUNT CENTER</p><h2>Your profile</h2><p class="hero-text">Manage your account and keep your preparation private and consistent.</p>
     <div class="profile-card"><div class="avatar" id="avatar">PT</div><div><h3 id="profile-name">—</h3><p id="profile-email">—</p><span class="role-pill" id="profile-role">USER</span></div></div>
-    <div class="stats-row"><div class="stat-card"><div class="stat-label">Practice sessions</div><div class="stat-value" id="profile-sessions">0</div></div><div class="stat-card"><div class="stat-label">Questions answered</div><div class="stat-value" id="profile-answered">0</div></div><div class="stat-card"><div class="stat-label">Average score</div><div class="stat-value" id="profile-average">0%</div></div></div>
+    <div class="stats-row"><div class="stat-card"><div class="stat-label">Completed sessions</div><div class="stat-value" id="profile-sessions">0</div></div><div class="stat-card"><div class="stat-label">Questions answered</div><div class="stat-value" id="profile-answered">0</div></div><div class="stat-card"><div class="stat-label">Average score</div><div class="stat-value" id="profile-average">0%</div></div></div>
+    <div class="resource-section"><h3>Aptitude course progress</h3><p id="profile-next-level" class="hero-text">Start Level 1 to begin your 100-level course.</p><div id="profile-levels" class="level-grid"></div></div>
+    <div class="resource-section"><h3>DSA course progress</h3><p id="dsa-next-level" class="hero-text">Start Level 1 to begin your DSA course.</p><div id="dsa-levels" class="level-grid"></div></div>
     <div class="resource-section profile-security"><h3>Session security</h3><p class="hero-text">Your session expires automatically. Sign out on shared devices.</p><button class="danger-btn" id="profile-logout" type="button">Sign out everywhere</button></div>
 </section></main>
 <script src="auth.js"></script><script src="shared-nav.js"></script>
 <script>
 (function () {
-    const session = PTAuth.getSession(); if (!session) return;
-    document.getElementById('profile-name').textContent = session.username;
-    document.getElementById('profile-email').textContent = session.email;
-    document.getElementById('profile-role').textContent = session.role.toUpperCase();
-    document.getElementById('avatar').textContent = session.username.slice(0, 2).toUpperCase();
-    const scores = JSON.parse(localStorage.getItem('pt_aptitude_scores') || '[]');
-    document.getElementById('profile-sessions').textContent = scores.length;
-    document.getElementById('profile-answered').textContent = scores.reduce(function (sum, item) { return sum + item.total; }, 0);
+    function readJson(key, fallback) {
+        try {
+            const value = JSON.parse(localStorage.getItem(key) || 'null');
+            return value === null ? fallback : value;
+        } catch (error) {
+            return fallback;
+        }
+    }
+
+    const session = PTAuth.getSession();
+    if (!session) return;
+    const username = String(session.username || 'Learner');
+    const userId = session.userId || 'guest';
+    document.getElementById('profile-name').textContent = username;
+    document.getElementById('profile-email').textContent = session.email || 'Email not provided';
+    document.getElementById('profile-role').textContent = String(session.role || 'user').toUpperCase();
+    document.getElementById('avatar').textContent = username.slice(0, 2).toUpperCase();
+    const progressKey = 'pt_aptitude_progress:' + userId;
+    const progress = readJson(progressKey, readJson('pt_aptitude_progress', {}));
+    const scores = readJson('pt_aptitude_scores', []).filter(function (item) {
+        return !item.userId || item.userId === (session.userId || 'guest');
+    });
+    const completedLevels = Array.isArray(progress.completedLevels) ? progress.completedLevels : [];
+    const completedSessions = Number.isInteger(progress.completedSessions)
+        ? progress.completedSessions
+        : completedLevels.length;
+    const currentQuestionIndex = Number.isInteger(progress.currentQuestionIndex)
+        ? Math.max(0, Math.min(progress.currentQuestionIndex, 10))
+        : 0;
+    document.getElementById('profile-sessions').textContent = completedSessions;
+    document.getElementById('profile-answered').textContent = (completedLevels.length * 10) + currentQuestionIndex;
     const average = scores.length ? Math.round(scores.reduce(function (sum, item) { return sum + (item.score / item.total) * 100; }, 0) / scores.length) : 0;
     document.getElementById('profile-average').textContent = average + '%';
+    const nextLevel = Math.min(Number(progress.currentLevel) || 1, 100);
+    document.getElementById('profile-next-level').textContent = nextLevel === 100 && completedLevels.indexOf(100) !== -1
+        ? 'You completed every level. Excellent work!'
+        : 'Next up: Level ' + nextLevel + ' · 10 questions';
+    document.getElementById('profile-levels').innerHTML = Array.from({ length: 100 }, function (_, index) {
+        const level = index + 1;
+        const done = completedLevels.indexOf(level) !== -1;
+        return '<span class="level-chip ' + (done ? 'complete' : '') + '">' + level + (done ? ' ✓' : '') + '</span>';
+    }).join('');
+    const dsaProgress = readJson('pt_dsa_progress:' + userId, {});
+    const dsaLevels = Array.isArray(dsaProgress.completedLevels) ? dsaProgress.completedLevels : [];
+    const dsaNext = Math.min(Number(dsaProgress.currentLevel) || 1, 100);
+    document.getElementById('dsa-next-level').textContent = dsaNext === 100 && dsaLevels.indexOf(100) !== -1
+        ? 'You completed every DSA level. Excellent work!'
+        : 'Next up: Level ' + dsaNext + ' · 10 questions';
+    document.getElementById('dsa-levels').innerHTML = Array.from({ length: 100 }, function (_, index) {
+        const level = index + 1;
+        const done = dsaLevels.indexOf(level) !== -1;
+        return '<span class="level-chip ' + (done ? 'complete' : '') + '">' + level + (done ? ' ✓' : '') + '</span>';
+    }).join('');
     document.getElementById('profile-logout').addEventListener('click', function (event) {
-        event.currentTarget.disabled = true;
+        event.preventDefault();
+        var logoutButton = event.currentTarget;
+        logoutButton.disabled = true;
+        logoutButton.textContent = 'Signing out…';
         PTAuth.logout();
-        window.location.replace('login.html');
+        sessionStorage.clear();
+        window.location.assign('login.html');
     });
 })();
 </script>

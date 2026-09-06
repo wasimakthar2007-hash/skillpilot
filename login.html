@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="auth-page">
+    <button type="button" class="auth-back-btn" id="auth-back" aria-label="Go back">← Back</button>
     <main class="auth-shell">
         <section class="auth-card">
             <div class="auth-brand"><img src="assets/skill-pilot-logo.png" alt="Skill Pilot logo" class="auth-logo"><span>Skill Pilot</span></div>
@@ -28,9 +29,14 @@
         </section>
         <aside class="auth-aside"><span class="aside-badge">LEARN • PRACTICE • PLACE</span><h2>Your next opportunity starts here.</h2><p>Build a steady practice habit with clear learning tracks and instant feedback.</p><div class="mini-stat-row"><span><strong>03</strong><small>learning tracks</small></span><span><strong>24/7</strong><small>self-paced access</small></span></div></aside>
     </main>
+    <footer class="site-footer auth-footer"><span>Skill Pilot</span><span>Prepared by BSc AI Student, New College</span></footer>
     <script src="auth.js"></script>
     <script>
     (function () {
+        document.getElementById('auth-back').addEventListener('click', function () {
+            if (window.history.length > 1) window.history.back();
+            else window.location.href = 'index.html';
+        });
         const form = document.getElementById('auth-form'), message = document.getElementById('auth-message'), submit = document.getElementById('auth-submit');
         let mode = 'login';
         const ready = PTAuth.ensureDemoAdmin();

@@ -4,6 +4,7 @@
  */
 const PdfParser = (function () {
     const PDF_URL = 'jsdsa_100000_questions_answers_compact.pdf';
+    const PARSER_VERSION = '2';
     const PDFJS_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
     const WORKER_URL = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -134,6 +135,29 @@ const PdfParser = (function () {
 
     function parsePipeRows(text) {
         const results = [];
+        const records = text.split(/(?=^\s*id=\d+\s*\|)/m);
+
+        records.forEach(function (record) {
+            const fields = {};
+            record.split(/\s*\|\s*(?=[a-z_]+=[^|]*)/i).forEach(function (part) {
+                const match = part.match(/^\s*([a-z_]+)=(.*)$/is);
+                if (match) fields[match[1].toLowerCase()] = match[2].trim();
+            });
+
+            if (!fields.question || !fields.option_a || !fields.option_b ||
+                !fields.option_c || !fields.option_d) return;
+
+            const options = [fields.option_a, fields.option_b, fields.option_c, fields.option_d];
+            results.push({
+                question: fields.question.replace(/\s+/g, ' ').trim(),
+                options: options,
+                answer: findAnswerIndex(options, fields.answer),
+                explanation: (fields.explanation || 'No explanation provided.').replace(/\s+/g, ' ').trim()
+            });
+        });
+
+        if (results.length) return results;
+
         const lines = text.split('\n');
 
         lines.forEach(function (line) {
@@ -283,7 +307,8 @@ const PdfParser = (function () {
         await QuestionStore.clearQuestions();
         const meta = await QuestionStore.saveQuestions(unique, {
             pages: numPages,
-            source: PDF_URL
+            source: PDF_URL,
+            parserVersion: PARSER_VERSION
         });
 
         report('done', 100, 'Done! Cached ' + meta.total + ' questions.');
@@ -292,6 +317,7 @@ const PdfParser = (function () {
 
     return {
         PDF_URL: PDF_URL,
+        PARSER_VERSION: PARSER_VERSION,
         extractAndParse: extractAndParse,
         parseQuestionsFromText: parseQuestionsFromText
     };

@@ -15,7 +15,7 @@ const aiLimiter = rateLimit({ windowMs: 60 * 1000, limit: 20, standardHeaders: t
 app.use(express.json({ limit: '32kb' }));
 app.use(express.static(__dirname));
 
-const jobs = [
+const featuredJobs = [
     { title: 'Junior Frontend Developer', company: 'BrightLayer Technologies', location: 'Bengaluru', experience: '0-2 years', type: 'Full-time', skills: ['JavaScript', 'HTML/CSS', 'React'], description: 'Build accessible product experiences with a collaborative product team.', applyUrl: 'https://www.linkedin.com/jobs/search/?keywords=junior%20frontend%20developer' },
     { title: 'Graduate Software Engineer', company: 'Northstar Labs', location: 'Hyderabad', experience: '0-1 years', type: 'Full-time', skills: ['Java', 'SQL', 'Git'], description: 'Join a graduate engineering programme working on reliable backend services.', applyUrl: 'https://www.linkedin.com/jobs/search/?keywords=graduate%20software%20engineer' },
     { title: 'QA Automation Engineer', company: 'CloudForge', location: 'Remote', experience: '1-3 years', type: 'Full-time', skills: ['JavaScript', 'Playwright', 'CI/CD'], description: 'Create dependable automated tests for a fast-moving cloud platform.', applyUrl: 'https://www.linkedin.com/jobs/search/?keywords=qa%20automation%20engineer' },
@@ -28,8 +28,46 @@ const jobs = [
     { title: 'Business Analyst', company: 'GrowthPath Consulting', location: 'Gurugram', experience: '1-3 years', type: 'Full-time', skills: ['Excel', 'SQL', 'Communication'], description: 'Translate business needs into clear requirements and measurable outcomes.', applyUrl: 'https://www.linkedin.com/jobs/search/?keywords=business%20analyst' }
 ];
 
+const jobTemplates = [
+    ['Software Engineer', 'Engineering', ['JavaScript', 'React', 'Git']],
+    ['Frontend Developer', 'Product Engineering', ['HTML/CSS', 'React', 'TypeScript']],
+    ['Backend Developer', 'Platform Engineering', ['Node.js', 'SQL', 'REST APIs']],
+    ['Data Analyst', 'Analytics', ['Python', 'SQL', 'Excel']],
+    ['QA Automation Engineer', 'Quality Engineering', ['Playwright', 'JavaScript', 'CI/CD']],
+    ['Cloud Support Engineer', 'Cloud Operations', ['Azure', 'Linux', 'Networking']],
+    ['UI/UX Designer', 'Design', ['Figma', 'Research', 'Prototyping']],
+    ['Business Analyst', 'Business Operations', ['Excel', 'SQL', 'Communication']],
+    ['DevOps Engineer', 'Platform', ['Docker', 'Kubernetes', 'CI/CD']],
+    ['Product Associate', 'Product', ['Research', 'Roadmaps', 'Communication']]
+];
+const jobCompanies = ['NovaWorks', 'GreenGrid', 'Orbit Labs', 'SkillSpring', 'Elevate Systems', 'Mosaic Digital', 'BluePeak', 'Cedar Technologies', 'Flowline', 'NextBridge'];
+const jobLocations = ['Remote', 'Bengaluru', 'Hyderabad', 'Pune', 'Chennai', 'Mumbai', 'Gurugram', 'Noida'];
+const jobExperiences = ['0-1 years', '0-2 years', '1-3 years', '2-5 years'];
+
+function getJobs() {
+    const generated = [];
+    for (let index = 0; index < 100 - featuredJobs.length; index += 1) {
+        const template = jobTemplates[index % jobTemplates.length];
+        const company = jobCompanies[index % jobCompanies.length];
+        const location = jobLocations[index % jobLocations.length];
+        const experience = jobExperiences[index % jobExperiences.length];
+        const title = template[0] + (index % 3 === 0 ? ' — Graduate Programme' : '');
+        generated.push({
+            title,
+            company: company + ' ' + (Math.floor(index / jobCompanies.length) + 1),
+            location,
+            experience,
+            type: experience === '0-1 years' && index % 4 === 0 ? 'Internship' : 'Full-time',
+            skills: template[2],
+            description: 'Join the ' + template[1].toLowerCase() + ' team and build practical solutions with experienced mentors.',
+            applyUrl: 'https://www.linkedin.com/jobs/search/?keywords=' + encodeURIComponent(title)
+        });
+    }
+    return featuredJobs.concat(generated);
+}
+
 app.get('/api/jobs', function (req, res) {
-    res.json({ jobs: jobs });
+    res.json({ jobs: getJobs(), updatedAt: new Date().toISOString() });
 });
 
 async function askGoogle(prompt) {

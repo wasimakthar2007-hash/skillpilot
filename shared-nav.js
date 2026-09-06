@@ -31,19 +31,19 @@
         '<div class="header-start"><button type="button" class="back-btn" id="back-btn" aria-label="Go back">←</button>' +
         '<h1><a href="index.html" class="brand-link"><img src="assets/skill-pilot-logo.png" alt="" class="brand-logo"> <span>Skill Pilot</span></a></h1></div>' +
         '<nav>' + navHtml +
-        '<a href="profile.html" class="nav-link">Profile</a>' +
-        '<button type="button" class="nav-btn" id="logout-btn">Log out</button></nav>';
+        '<a href="profile.html" class="nav-link">Profile</a></nav>';
 
     document.body.insertBefore(header, document.body.firstChild);
     document.getElementById('back-btn').addEventListener('click', function () {
         if (window.history.length > 1) window.history.back();
         else window.location.href = 'index.html';
     });
-    document.getElementById('logout-btn').addEventListener('click', function (event) {
-        event.currentTarget.disabled = true;
-        PTAuth.logout();
-        window.location.replace('login.html');
-    });
+    if (!document.querySelector('.site-footer')) {
+        const footer = document.createElement('footer');
+        footer.className = 'site-footer';
+        footer.innerHTML = '<span>Skill Pilot</span><span>Prepared by BSc AI Student, New College</span>';
+        document.body.appendChild(footer);
+    }
 
     let savedResources = [];
     try {
@@ -58,9 +58,9 @@
         });
     if (pageResources.length) {
         const resourcePanel = document.createElement('aside');
-        resourcePanel.className = 'global-resources';
+        resourcePanel.className = 'global-resources admin-resource-highlight';
         const heading = document.createElement('strong');
-        heading.textContent = 'Resources for this page';
+        heading.textContent = 'Administrator resources';
         resourcePanel.appendChild(heading);
         pageResources.slice(0, 6).forEach(function (resource) {
             const link = document.createElement('a');

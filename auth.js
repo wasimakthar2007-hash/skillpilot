@@ -97,7 +97,11 @@
             if (!stored[i]) continue;
             try {
                 const session = JSON.parse(stored[i]);
-                if (session.expiresAt && session.expiresAt >= Date.now()) {
+                if (session && session.userId && session.username && !session.expiresAt) {
+                    session.expiresAt = Date.now() + 2 * 24 * 60 * 60 * 1000;
+                }
+                if (session && session.userId && session.username &&
+                    Number(session.expiresAt) >= Date.now()) {
                     sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
                     return session;
                 }
