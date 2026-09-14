@@ -22,6 +22,10 @@
     var levelLabel = document.getElementById('level-label');
     var sessionLabel = document.getElementById('session-label');
     var progressBar = document.getElementById('progress-bar');
+    var practiceTopic = document.getElementById('practice-topic');
+    var practiceCompany = document.getElementById('practice-company');
+    var btnFocusedPractice = document.getElementById('btn-focused-practice');
+    var practiceMode = false;
 
     function renderProgress(progress) {
         var completed = progress.completedLevels.length;
@@ -38,7 +42,9 @@
         feedback.classList.remove('correct-feedback', 'wrong-feedback');
         btnNext.classList.add('hidden');
         optionsContainer.innerHTML = '';
-        questionProgress.textContent = 'Level ' + currentLevel + ' · Question ' + (currentQuestionIndex + 1) + ' of ' + currentQuestions.length + ' · ' + q.topic;
+        questionProgress.textContent = (practiceMode ? 'Focused practice' : 'Level ' + currentLevel) +
+            ' · Question ' + (currentQuestionIndex + 1) + ' of ' + currentQuestions.length +
+            ' · ' + q.topic + (q.company ? ' · ' + q.company + ' style' : '');
         questionText.textContent = q.question;
 
         q.options.forEach(function (option, index) {
@@ -86,17 +92,20 @@
         scoreBoard.classList.remove('hidden');
         document.getElementById('score').textContent = score;
         document.getElementById('total-questions').textContent = currentQuestions.length;
-        QuestionStore.saveScore({
-            score: score,
-            total: currentQuestions.length,
-            level: currentLevel,
-            sessionNumber: sessionNumber,
-            questionStart: (currentLevel - 1) * 10
-        });
-        renderProgress(QuestionStore.getProgress());
+        if (!practiceMode) {
+            QuestionStore.saveScore({
+                score: score,
+                total: currentQuestions.length,
+                level: currentLevel,
+                sessionNumber: sessionNumber,
+                questionStart: (currentLevel - 1) * 10
+            });
+            renderProgress(QuestionStore.getProgress());
+        }
         document.getElementById('quiz-title').textContent =
-            currentLevel < 100 ? 'Level ' + currentLevel + ' complete!' : 'Course complete!';
-        if (currentLevel < 100) {
+            practiceMode ? 'Focused practice complete!' :
+                (currentLevel < 100 ? 'Level ' + currentLevel + ' complete!' : 'Course complete!');
+        if (!practiceMode && currentLevel < 100) {
             btnNextLevel.textContent = 'Continue to Level ' + (currentLevel + 1);
             btnNextLevel.classList.remove('hidden');
         } else {
@@ -105,6 +114,8 @@
     }
 
     async function startQuiz() {
+        practiceMode = false;
+        document.getElementById('quiz-title').textContent = 'Aptitude Training & Testing';
         emptyBank.classList.add('hidden');
         scoreBoard.classList.add('hidden');
         btnNextLevel.classList.add('hidden');
@@ -132,8 +143,37 @@
         }
     }
 
+    async function startFocusedPractice() {
+        emptyBank.classList.add('hidden');
+        scoreBoard.classList.add('hidden');
+        btnNextLevel.classList.add('hidden');
+        questionContainer.classList.add('hidden');
+        courseProgress.classList.add('hidden');
+        loadingMsg.classList.remove('hidden');
+        practiceMode = true;
+        currentQuestionIndex = 0;
+        score = 0;
+        try {
+            currentQuestions = await QuestionStore.getPracticeQuestions(
+                practiceTopic.value,
+                practiceCompany.value,
+                10
+            );
+            if (!currentQuestions.length) throw new Error('No questions match this topic and company. Try a broader selection.');
+            loadingMsg.classList.add('hidden');
+            questionContainer.classList.remove('hidden');
+            showQuestion();
+        } catch (error) {
+            loadingMsg.classList.add('hidden');
+            emptyBank.classList.remove('hidden');
+            emptyBank.innerHTML = '<p>Could not load focused practice.</p><p>' +
+                (error && error.message ? error.message : String(error)) + '</p>';
+        }
+    }
+
     btnNext.addEventListener('click', nextQuestion);
     btnRetry.addEventListener('click', startQuiz);
     btnNextLevel.addEventListener('click', startQuiz);
+    btnFocusedPractice.addEventListener('click', startFocusedPractice);
     startQuiz();
 })();

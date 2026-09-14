@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "source": "Original company-style placement practice",
+  "questions": [
+    {
+      "id": "company-1",
+      "topic": "Blood Relations",
+      "company": "TCS",
+      "difficulty": "easy",
+      "question": "Pointing to a man, Ravi said, \"He is the son of my mother's only brother.\" How is the man related to Ravi?",
+      "options": ["Brother", "Cousin", "Uncle", "Nephew"],
+      "answer": 1,
+      "explanation": "Your mother's only brother is your maternal uncle. His son is your cousin."
+    },
+    {
+      "id": "company-2",
+      "topic": "Blood Relations",
+      "company": "Infosys",
+      "difficulty": "easy",
+      "question": "A is the sister of B. B is the father of C. How is A related to C?",
+      "options": ["Mother", "Aunt", "Sister", "Cousin"],
+      "answer": 1,
+      "explanation": "B is C's father and A is B's sister, so A is C's aunt."
+    },
+    {
+      "id": "company-3",
+      "topic": "Logical Reasoning",
+      "company": "Google",
+      "difficulty": "medium",
+      "question": "If all analysts are problem-solvers and some engineers are analysts, which conclusion must be true?",
+      "options": ["All engineers are problem-solvers", "Some engineers are problem-solvers", "No engineer is a problem-solver", "All problem-solvers are engineers"],
+      "answer": 1,
+      "explanation": "The engineers who are analysts must also be problem-solvers."
+    },
+    {
+      "id": "company-4",
+      "topic": "Logical Reasoning",
+      "company": "OpenAI",
+      "difficulty": "medium",
+      "question": "Five people sit in a row. Maya sits to the left of Ravi but to the right of Neha. Who is definitely not to Maya's left?",
+      "options": ["Neha", "Ravi", "A person in the first seat", "Nobody"],
+      "answer": 1,
+      "explanation": "Ravi is to Maya's right, so Ravi cannot be to her left."
+    },
+    {
+      "id": "company-5",
+      "topic": "Coding-Decoding",
+      "company": "Zoho",
+      "difficulty": "easy",
+      "question": "In a code, CAT is written as DBU. How is DOG written using the same rule?",
+      "options": ["EPH", "CNE", "FQI", "DPE"],
+      "answer": 0,
+      "explanation": "Each letter moves one position forward: D becomes E, O becomes P, and G becomes H."
+    },
+    {
+      "id": "company-6",
+      "topic": "Number Series",
+      "company": "TCS",
+      "difficulty": "easy",
+      "question": "Find the next number: 3, 8, 15, 24, 35, ?",
+      "options": ["46", "47", "48", "50"],
+      "answer": 2,
+      "explanation": "The differences are 5, 7, 9, and 11. The next difference is 13, so 35 + 13 = 48."
+    },
+    {
+      "id": "company-7",
+      "topic": "Logical Reasoning",
+      "company": "Infosys",
+      "difficulty": "medium",
+      "question": "A clock shows 3:00. What is the smaller angle between its hands?",
+      "options": ["0 degrees", "30 degrees", "90 degrees", "180 degrees"],
+      "answer": 2,
+      "explanation": "At 3:00, the minute hand is at 12 and the hour hand is at 3, making a 90-degree angle."
+    },
+    {
+      "id": "company-8",
+      "topic": "Quantitative Aptitude",
+      "company": "Google",
+      "difficulty": "easy",
+      "question": "A team completes 3 tasks in 6 hours at a constant rate. How many tasks can it complete in 10 hours?",
+      "options": ["4", "5", "6", "8"],
+      "answer": 1,
+      "explanation": "The rate is 3/6 = 1/2 task per hour. In 10 hours, the team completes 5 tasks."
+    },
+    {
+      "id": "company-9",
+      "topic": "Blood Relations",
+      "company": "OpenAI",
+      "difficulty": "medium",
+      "question": "The woman in the photo is the mother of the only daughter of Meera's father's only son. How is the woman related to Meera?",
+      "options": ["Mother", "Sister-in-law", "Aunt", "Daughter"],
+      "answer": 1,
+      "explanation": "Meera's father's only son is her brother. His only daughter is Meera's niece, so the girl's mother is Meera's sister-in-law."
+    },
+    {
+      "id": "company-10",
+      "topic": "Logical Reasoning",
+      "company": "Zoho",
+      "difficulty": "easy",
+      "question": "If Monday is coded as 1 and Tuesday as 2, what number represents Friday?",
+      "options": ["4", "5", "6", "7"],
+      "answer": 1,
+      "explanation": "Friday is the fifth day when Monday is counted as day 1."
+    }
+  ]
+}

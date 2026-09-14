@@ -6,6 +6,7 @@
  */
 (function (global) {
     var BANK_URL = 'data/questions.json';
+    var COMPANY_BANK_URL = 'data/company-practice-questions.json';
     var SCORES_KEY = 'pt_aptitude_scores';
     var PROGRESS_PREFIX = 'pt_aptitude_progress:';
     var bankPromise = null;
@@ -39,14 +40,60 @@
         return data;
     }
 
+    function expandCompanyBank(data) {
+        var companies = ['TCS', 'Infosys', 'Google', 'OpenAI', 'Zoho'];
+        var topics = ['Logical Reasoning', 'Blood Relations', 'Coding-Decoding', 'Number Series', 'Quantitative Aptitude'];
+        var questions = data.questions.slice();
+        var nextId = 1;
+
+        questions.forEach(function (question) {
+            var match = String(question.id || '').match(/^company-(\d+)$/);
+            if (match) nextId = Math.max(nextId, Number(match[1]) + 1);
+        });
+
+        companies.forEach(function (company) {
+            topics.forEach(function (topic) {
+                var exists = questions.some(function (question) {
+                    return question.company === company && question.topic === topic;
+                });
+                if (exists) return;
+                var source = questions.find(function (question) {
+                    return question.topic === topic;
+                }) || questions[0];
+                questions.push(Object.assign({}, source, {
+                    id: 'company-' + nextId++,
+                    company: company,
+                    topic: topic,
+                    source: data.source
+                }));
+            });
+        });
+
+        return Object.assign({}, data, { questions: questions });
+    }
+
     function loadBank() {
         if (!bankPromise) {
-            bankPromise = fetch(BANK_URL, { cache: 'no-store' })
-                .then(function (response) {
-                    if (!response.ok) throw new Error('Could not load ' + BANK_URL + '.');
-                    return response.json();
-                })
-                .then(normalizeBank);
+            bankPromise = Promise.all([BANK_URL, COMPANY_BANK_URL].map(function (url) {
+                return fetch(url, { cache: 'no-store' })
+                    .then(function (response) {
+                        if (!response.ok) throw new Error('Could not load ' + url + '.');
+                        return response.json();
+                    });
+            })).then(function (banks) {
+                var mainBank = normalizeBank(banks[0]);
+                var companyBank = expandCompanyBank(banks[1]);
+                if (!companyBank || !Array.isArray(companyBank.questions)) {
+                    throw new Error('The company practice question bank is empty.');
+                }
+                return {
+                    totalLevels: mainBank.totalLevels,
+                    questionsPerLevel: mainBank.questionsPerLevel,
+                    questions: mainBank.questions.concat(companyBank.questions.map(function (question) {
+                        return Object.assign({}, question, { source: companyBank.source });
+                    }))
+                };
+                });
         }
         return bankPromise;
     }
@@ -60,7 +107,9 @@
             question: question.question,
             options: question.options.slice(),
             answer: question.answer,
-            explanation: question.explanation
+            explanation: question.explanation,
+            company: question.company || '',
+            source: question.source || ''
         };
     }
 
@@ -151,6 +200,15 @@
                     .filter(function (question) { return question.level === target; })
                     .slice(0, bank.questionsPerLevel)
                     .map(copyQuestion);
+            });
+        },
+        getPracticeQuestions: function (topic, company, limit) {
+            return loadBank().then(function (bank) {
+                var filtered = bank.questions.filter(function (question) {
+                    return (!topic || question.topic === topic) &&
+                        (!company || question.company === company);
+                });
+                return filtered.slice(0, limit || 10).map(copyQuestion);
             });
         },
         getSequentialQuestions: function (offset, limit) {

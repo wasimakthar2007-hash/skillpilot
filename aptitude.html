@@ -14,6 +14,35 @@
             <h2 id="quiz-title">Aptitude Training &amp; Testing</h2>
             <p class="hero-text">Complete 10 focused questions per level. Your level, score, and exact resume point are saved automatically.</p>
 
+            <div class="practice-controls">
+                <div>
+                    <p class="eyebrow">FOCUSED PRACTICE</p>
+                    <p class="muted">Choose a reasoning area or company-style set to strengthen your preparation.</p>
+                </div>
+                <label>Topic
+                    <select id="practice-topic">
+                        <option value="">All topics</option>
+                        <option value="Logical Reasoning">Logical Reasoning</option>
+                        <option value="Blood Relations">Blood Relations</option>
+                        <option value="Coding-Decoding">Coding-Decoding</option>
+                        <option value="Number Series">Number Series</option>
+                        <option value="Quantitative Aptitude">Quantitative Aptitude</option>
+                    </select>
+                </label>
+                <label>Company-style set
+                    <select id="practice-company">
+                        <option value="">All company-style questions</option>
+                        <option value="TCS">TCS</option>
+                        <option value="Infosys">Infosys</option>
+                        <option value="Google">Google</option>
+                        <option value="OpenAI">OpenAI</option>
+                        <option value="Zoho">Zoho</option>
+                    </select>
+                </label>
+                <button type="button" class="primary-btn" id="btn-focused-practice">Start focused practice</button>
+                <p class="practice-note">These are original practice questions based on common placement patterns, not official company papers.</p>
+            </div>
+
             <div id="course-progress" class="course-progress hidden">
                 <div><strong id="level-label">Level 1 of 100</strong><span id="session-label">0 levels completed</span></div>
                 <div class="progress-track"><span id="progress-bar"></span></div>

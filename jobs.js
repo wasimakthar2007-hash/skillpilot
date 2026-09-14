@@ -8,6 +8,8 @@
     const currentRole = document.getElementById('current-role');
     const count = document.getElementById('job-count');
     const updated = document.getElementById('jobs-updated');
+    const filters = document.getElementById('job-filters');
+    const resultMessage = document.getElementById('jobs-result');
     let jobs = [];
     let locationsLoaded = false;
     let experiencesLoaded = false;
@@ -25,6 +27,9 @@
                 (!experience || job.experience === experience);
         });
         count.textContent = filtered.length + ' opening' + (filtered.length === 1 ? '' : 's');
+        resultMessage.textContent = query || location || experience
+            ? 'Showing ' + filtered.length + ' of ' + jobs.length + ' opportunities matching your search.'
+            : 'Showing all ' + filtered.length + ' available opportunities.';
         list.innerHTML = filtered.map(function (job) {
             return '<article class="job-card"><div><span class="job-company">' + escapeHtml(job.company) + '</span>' +
                 '<h3>' + escapeHtml(job.title) + '</h3><p>' + escapeHtml(job.description) + '</p>' +
@@ -50,7 +55,7 @@
         var experiences = ['0-1 years', '0-2 years', '1-3 years', '2-5 years'];
         var types = ['Full-time', 'Internship', 'Contract'];
         var index = 0;
-        while (jobsCopy.length < 100) {
+        while (jobsCopy.length < 1000) {
             var original = base[index % base.length];
             var copyNumber = Math.floor(index / base.length) + 2;
             var title = original.title + ' — Opportunity ' + copyNumber;
@@ -86,7 +91,12 @@
 
     function loadJobs() {
         message.textContent = '';
-        return fetch('/api/jobs?updated=' + Date.now(), { cache: 'no-store' })
+        const apiOrigin = window.location.protocol === 'file:'
+            ? 'http://localhost:3001'
+            : (window.location.hostname === 'localhost' && window.location.port === '3000'
+                ? 'http://localhost:3001'
+                : '');
+        return fetch(apiOrigin + '/api/jobs?updated=' + Date.now(), { cache: 'no-store' })
         .then(function (response) {
             if (!response.ok) throw new Error('Job vacancies are temporarily unavailable.');
             return response.json();
@@ -97,8 +107,8 @@
             updated.textContent = 'Updated ' + new Date(data.updatedAt || Date.now()).toLocaleTimeString();
             render();
         })
-        .catch(function (error) {
-            message.textContent = error.message;
+        .catch(function () {
+            message.textContent = 'Job vacancies are temporarily unavailable. Please open this page through the Skill Pilot server at http://localhost:3001.';
             updated.textContent = 'Update failed — retrying soon';
         });
     }
@@ -106,8 +116,13 @@
     loadJobs();
     window.setInterval(loadJobs, 60 * 1000);
 
+    filters.addEventListener('submit', function (event) {
+        event.preventDefault();
+        render();
+        resultMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+
     [search, locationFilter, experienceFilter].forEach(function (control) {
-        control.addEventListener('input', render);
         control.addEventListener('change', render);
     });
 })();

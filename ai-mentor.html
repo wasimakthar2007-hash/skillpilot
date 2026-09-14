@@ -12,13 +12,24 @@
         <section class="page-panel ai-tool">
             <p class="eyebrow">PERSONAL STUDY GUIDE</p>
             <h2>AI Mentor</h2>
-            <p class="hero-text">Ask a doubt about aptitude, DSA, interviews, or career preparation. The mentor explains the answer step by step.</p>
-            <form id="mentor-form" class="tool-form">
-                <label for="mentor-question">Your doubt<textarea id="mentor-question" rows="6" required minlength="5" placeholder="Explain how binary search works..."></textarea></label>
-                <button class="primary-btn" type="submit">Clear my doubt</button>
-            </form>
-            <p id="mentor-status" class="form-message" role="status"></p>
-            <article id="mentor-answer" class="answer-panel hidden" aria-live="polite"></article>
+            <p class="hero-text">Get professional guidance on aptitude, DSA, technical subjects, interviews, resumes, and job opportunities.</p>
+            <div class="mentor-workspace">
+                <aside class="mentor-history" aria-label="Mentor chat history">
+                    <div class="mentor-history-heading"><div><span class="eyebrow">YOUR CHAT</span><h3>Saved questions</h3></div><button id="clear-mentor-history" class="text-btn" type="button">Clear</button></div>
+                    <label class="history-search-label" for="mentor-history-search">Search chat</label>
+                    <input id="mentor-history-search" class="history-search" type="search" placeholder="Search your questions…">
+                    <div id="mentor-history-list" class="mentor-history-list" aria-live="polite"></div>
+                </aside>
+                <div class="mentor-conversation">
+                    <form id="mentor-form" class="tool-form">
+                        <label for="mentor-question">Your career or study question<textarea id="mentor-question" rows="6" required minlength="5" placeholder="How should I prepare for a Java backend interview?"></textarea></label>
+                        <p class="mentor-scope">Supported: placement subjects, interview preparation, resumes, skills, and job opportunities.</p>
+                        <button class="primary-btn" type="submit">Get professional guidance</button>
+                    </form>
+                    <p id="mentor-status" class="form-message" role="status"></p>
+                    <article id="mentor-answer" class="answer-panel hidden" aria-live="polite"></article>
+                </div>
+            </div>
         </section>
     </main>
     <script src="auth.js"></script><script src="shared-nav.js"></script><script src="ai-mentor.js"></script>

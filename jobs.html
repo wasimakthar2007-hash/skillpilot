@@ -21,8 +21,10 @@
             <label>Search<input id="job-search" type="search" placeholder="Role, skill, or company"></label>
             <label>Location<select id="job-location"><option value="">All locations</option></select></label>
             <label>Experience<select id="job-experience"><option value="">Any experience</option></select></label>
+            <button class="primary-btn jobs-search-btn" type="submit">Search jobs</button>
         </form>
         <p id="jobs-message" class="form-message" role="status"></p>
+        <p id="jobs-result" class="jobs-result" role="status" aria-live="polite"></p>
         <div id="job-list" class="job-list" aria-live="polite"></div>
     </section>
 </main>
