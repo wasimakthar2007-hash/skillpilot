@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: skillpilot-api
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/jobs
+    envVars:
+      - key: NODE_VERSION
+        value: 20.11.1
+      - key: GOOGLE_AI_API_KEY
+        sync: false
+      - key: GOOGLE_AI_MODEL
+        value: gemini-3.6-flash
+      - key: ALLOWED_ORIGINS
+        value: https://wasimakthar2007-hash.github.io,http://localhost:3000,http://localhost:3001

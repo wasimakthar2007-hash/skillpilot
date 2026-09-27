@@ -24,6 +24,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Configure app server URL
+        run: |
+          node -e "require('fs').writeFileSync('api-config.js', 'window.SKILLPILOT_API_BASE_URL = ' + JSON.stringify(process.env.SKILLPILOT_API_BASE_URL || '') + ';\\n')"
+        env:
+          SKILLPILOT_API_BASE_URL: ${{ vars.SKILLPILOT_API_BASE_URL }}
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 

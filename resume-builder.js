@@ -50,7 +50,11 @@
         submitButton.disabled = true;
         submitButton.textContent = 'Analyzing...';
         try {
-            const response = await fetch('/api/resume/analyze', { method: 'POST', body: formData });
+            const apiBaseUrl = String(window.SKILLPILOT_API_BASE_URL || '').replace(/\/+$/, '');
+            if (window.location.hostname.endsWith('github.io') && !apiBaseUrl) {
+                throw new Error('The Resume Builder server URL is not configured. Set the SKILLPILOT_API_BASE_URL GitHub Actions variable and redeploy the site.');
+            }
+            const response = await fetch(apiBaseUrl + '/api/resume/analyze', { method: 'POST', body: formData });
             const body = await response.text();
             let data = {};
             if (body.trim()) {

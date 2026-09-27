@@ -13,8 +13,33 @@ const port = Number(process.env.PORT || 3000);
 const model = process.env.GOOGLE_AI_MODEL || 'gemini-3.6-flash';
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 const aiLimiter = rateLimit({ windowMs: 60 * 1000, limit: 20, standardHeaders: true, legacyHeaders: false });
+const allowedOrigins = new Set(
+    (process.env.ALLOWED_ORIGINS || 'https://wasimakthar2007-hash.github.io,http://localhost:3000,http://localhost:3001')
+        .split(',')
+        .map(function (origin) { return origin.trim(); })
+        .filter(Boolean)
+);
 
 app.use(express.json({ limit: '32kb' }));
+app.use(function (req, res, next) {
+    const origin = req.get('Origin');
+    if (!origin) return next();
+    let sameOrigin = false;
+    try {
+        sameOrigin = new URL(origin).host === req.get('host');
+    } catch (error) {
+        return res.status(403).json({ error: 'Origin is not allowed.' });
+    }
+    if (!sameOrigin && !allowedOrigins.has(origin)) {
+        return res.status(403).json({ error: 'Origin is not allowed.' });
+    }
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    if (req.method === 'OPTIONS') return res.sendStatus(204);
+    next();
+});
 app.use(express.static(__dirname));
 
 const featuredJobs = [

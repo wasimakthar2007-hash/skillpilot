@@ -1,0 +1,1 @@
+window.SKILLPILOT_API_BASE_URL = '';
