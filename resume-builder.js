@@ -3,6 +3,36 @@
     const status = document.getElementById('resume-status');
     const result = document.getElementById('resume-result');
     const submitButton = form.querySelector('button[type="submit"]');
+
+    const apiUrlInput = document.getElementById('resume-api-url');
+    const saveApiBtn = document.getElementById('resume-save-api-url');
+    const clearApiBtn = document.getElementById('resume-clear-api-url');
+    const API_OVERRIDE_KEY = 'pt_api_base_url_override';
+
+    function getApiBaseUrl() {
+        const override = (localStorage.getItem(API_OVERRIDE_KEY) || '').trim().replace(/\/+$/g, '');
+        if (override) return override;
+        return String(window.SKILLPILOT_API_BASE_URL || '').replace(/\/+$/, '');
+    }
+
+    function updateApiInputFromStorage() {
+        if (!apiUrlInput) return;
+        apiUrlInput.value = localStorage.getItem(API_OVERRIDE_KEY) || window.SKILLPILOT_API_BASE_URL || '';
+    }
+
+    if (apiUrlInput) {
+        updateApiInputFromStorage();
+        saveApiBtn.addEventListener('click', function () {
+            const val = (apiUrlInput.value || '').trim().replace(/\/+$/, '');
+            if (val) localStorage.setItem(API_OVERRIDE_KEY, val); else localStorage.removeItem(API_OVERRIDE_KEY);
+            status.textContent = 'Saved API base URL override.';
+        });
+        clearApiBtn.addEventListener('click', function () {
+            localStorage.removeItem(API_OVERRIDE_KEY);
+            updateApiInputFromStorage();
+            status.textContent = 'Cleared API base URL override.';
+        });
+    }
     function formatAnalysis(value) {
         const lines = String(value || '').replace(/\r/g, '').split('\n');
         const html = [];
@@ -50,11 +80,12 @@
         submitButton.disabled = true;
         submitButton.textContent = 'Analyzing...';
         try {
-            const apiBaseUrl = String(window.SKILLPILOT_API_BASE_URL || '').replace(/\/+$/, '');
-            if (window.location.hostname.endsWith('github.io') && !apiBaseUrl) {
-                throw new Error('The Resume Builder server URL is not configured. Set the SKILLPILOT_API_BASE_URL GitHub Actions variable and redeploy the site.');
+            const apiBaseUrl = getApiBaseUrl();
+            if (!apiBaseUrl && window.location.hostname.endsWith('github.io')) {
+                throw new Error('The Resume Builder server URL is not configured. Set the SKILLPILOT_API_BASE_URL GitHub Actions variable and redeploy the site, or enter your API URL in the field above.');
             }
-            const response = await fetch(apiBaseUrl + '/api/resume/analyze', { method: 'POST', body: formData });
+            const url = apiBaseUrl ? apiBaseUrl + '/api/resume/analyze' : '/api/resume/analyze';
+            const response = await fetch(url, { method: 'POST', body: formData });
             const body = await response.text();
             let data = {};
             if (body.trim()) {
@@ -64,7 +95,7 @@
                     throw new Error('The app server returned an invalid response (HTTP ' + response.status + '). Please restart the server and try again.');
                 }
             }
-            if (!response.ok) throw new Error(data.error || 'Resume analysis failed.');
+            if (!response.ok) throw new Error(typeof data.error === 'string' ? data.error : 'Resume analysis failed.');
             if (typeof data.analysis !== 'string' || !data.analysis.trim()) {
                 throw new Error('The app server returned an empty resume analysis.');
             }
@@ -72,7 +103,10 @@
             result.classList.remove('hidden');
             status.textContent = '';
         } catch (error) {
-            status.textContent = 'Connect the app server to use Resume Builder. ' + error.message;
+            const message = error instanceof TypeError
+                ? 'Could not reach the app server. Check its URL, availability, and CORS settings.'
+                : error.message;
+            status.textContent = 'Connect the app server to use Resume Builder. ' + message;
         } finally {
             submitButton.disabled = false;
             submitButton.textContent = 'Analyze resume';

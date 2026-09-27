@@ -13,6 +13,13 @@
             <p class="eyebrow">CAREER READY</p>
             <h2>Resume Builder</h2>
             <p class="hero-text">Upload a PDF, DOC, DOCX, or TXT resume and get an actionable improvement plan. Your file is processed by the secure app server.</p>
+            <div id="resume-api-config" class="api-config">
+                <label for="resume-api-url">API base URL (optional):</label>
+                <input id="resume-api-url" type="url" placeholder="https://your-api.example.com" />
+                <button id="resume-save-api-url" class="text-btn" type="button">Save</button>
+                <button id="resume-clear-api-url" class="text-btn" type="button">Clear</button>
+                <p class="muted small">If empty, the site uses the built-in SKILLPILOT_API_BASE_URL from deployment.</p>
+            </div>
             <form id="resume-form" class="tool-form">
                 <label for="resume-file">Resume file<input id="resume-file" type="file" accept=".pdf,.doc,.docx,.txt" required></label>
                 <label for="resume-role">Target role (optional)<input id="resume-role" placeholder="Frontend developer"></label>
