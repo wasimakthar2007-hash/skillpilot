@@ -51,8 +51,19 @@
         submitButton.textContent = 'Analyzing...';
         try {
             const response = await fetch('/api/resume/analyze', { method: 'POST', body: formData });
-            const data = await response.json();
+            const body = await response.text();
+            let data = {};
+            if (body.trim()) {
+                try {
+                    data = JSON.parse(body);
+                } catch (parseError) {
+                    throw new Error('The app server returned an invalid response (HTTP ' + response.status + '). Please restart the server and try again.');
+                }
+            }
             if (!response.ok) throw new Error(data.error || 'Resume analysis failed.');
+            if (typeof data.analysis !== 'string' || !data.analysis.trim()) {
+                throw new Error('The app server returned an empty resume analysis.');
+            }
             result.innerHTML = '<div class="answer-heading"><span>Resume analysis</span><small>Clear, actionable review</small></div><div class="answer-content">' + formatAnalysis(data.analysis) + '</div>';
             result.classList.remove('hidden');
             status.textContent = '';
