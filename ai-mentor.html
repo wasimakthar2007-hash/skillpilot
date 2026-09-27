@@ -21,6 +21,13 @@
                     <div id="mentor-history-list" class="mentor-history-list" aria-live="polite"></div>
                 </aside>
                 <div class="mentor-conversation">
+                    <div id="api-config-panel" class="api-config">
+                        <label for="mentor-api-url">API base URL (optional):</label>
+                        <input id="mentor-api-url" type="url" placeholder="https://your-api.example.com" />
+                        <button id="save-api-url" class="text-btn" type="button">Save</button>
+                        <button id="clear-api-url" class="text-btn" type="button">Clear</button>
+                        <p class="muted small">If empty, the site uses the built-in SKILLPILOT_API_BASE_URL from deployment.</p>
+                    </div>
                     <form id="mentor-form" class="tool-form">
                         <label for="mentor-question">Your career or study question<textarea id="mentor-question" rows="6" required minlength="5" placeholder="How should I prepare for a Java backend interview?"></textarea></label>
                         <p class="mentor-scope">Supported: placement subjects, interview preparation, resumes, skills, and job opportunities.</p>
@@ -32,6 +39,6 @@
             </div>
         </section>
     </main>
-    <script src="auth.js"></script><script src="shared-nav.js"></script><script src="ai-mentor.js"></script>
+    <script src="auth.js"></script><script src="shared-nav.js"></script><script src="api-config.js"></script><script src="ai-mentor.js"></script>
 </body>
 </html>

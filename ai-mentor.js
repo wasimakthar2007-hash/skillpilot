@@ -47,6 +47,36 @@
     const historyList = document.getElementById('mentor-history-list');
     const submitButton = form.querySelector('button[type="submit"]');
 
+    const apiUrlInput = document.getElementById('mentor-api-url');
+    const saveApiBtn = document.getElementById('save-api-url');
+    const clearApiBtn = document.getElementById('clear-api-url');
+    const API_OVERRIDE_KEY = 'pt_api_base_url_override';
+
+    function getApiBaseUrl() {
+        const override = (localStorage.getItem(API_OVERRIDE_KEY) || '').trim().replace(/\/+$|\s+$/g, '');
+        if (override) return override;
+        return String(window.SKILLPILOT_API_BASE_URL || '').replace(/\/+$/, '');
+    }
+
+    function updateApiInputFromStorage() {
+        if (!apiUrlInput) return;
+        apiUrlInput.value = localStorage.getItem(API_OVERRIDE_KEY) || window.SKILLPILOT_API_BASE_URL || '';
+    }
+
+    if (apiUrlInput) {
+        updateApiInputFromStorage();
+        saveApiBtn.addEventListener('click', function () {
+            const val = (apiUrlInput.value || '').trim().replace(/\/+$/, '');
+            if (val) localStorage.setItem(API_OVERRIDE_KEY, val); else localStorage.removeItem(API_OVERRIDE_KEY);
+            status.textContent = 'Saved API base URL override.';
+        });
+        clearApiBtn.addEventListener('click', function () {
+            localStorage.removeItem(API_OVERRIDE_KEY);
+            updateApiInputFromStorage();
+            status.textContent = 'Cleared API base URL override.';
+        });
+    }
+
     function renderHistory() {
         const query = (historySearch.value || '').trim().toLowerCase();
         const visible = chatHistory.filter(function (item) {
@@ -85,6 +115,23 @@
         renderHistory();
     }
 
+    function getApiError(data, response) {
+        const apiError = data && data.error;
+        const message = typeof apiError === 'string'
+            ? apiError
+            : apiError && typeof apiError.message === 'string'
+                ? apiError.message
+                : '';
+        if (response.status === 405) {
+            return 'The AI request reached a server that does not support the Mentor endpoint. Set SKILLPILOT_API_BASE_URL to your deployed Skill Pilot API URL, then redeploy the site.';
+        }
+        if (response.status === 404 && /No route for POST \/api\/mentor/i.test(message)) {
+            return 'The configured AI server does not provide the AI Mentor endpoint. Set SKILLPILOT_API_BASE_URL to the Render service running this project, then redeploy the site.';
+        }
+        if (message) return message;
+        return 'The AI server returned HTTP ' + response.status + ' without an error message.';
+    }
+
     historySearch.addEventListener('input', renderHistory);
     document.getElementById('clear-mentor-history').addEventListener('click', function () {
         if (!chatHistory.length) return;
@@ -103,21 +150,32 @@
         submitButton.disabled = true;
         submitButton.textContent = 'Preparing...';
         try {
-            const response = await fetch('/api/mentor', {
+            let apiBaseUrl = getApiBaseUrl();
+            if (!apiBaseUrl) {
+                if (window.location.hostname.endsWith('github.io')) {
+                    throw new Error('The AI server URL is not configured. Set the SKILLPILOT_API_BASE_URL GitHub Actions variable and redeploy the site, or enter your API URL in the field above.');
+                }
+            }
+            const url = apiBaseUrl ? apiBaseUrl + '/api/mentor' : '/api/mentor';
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ question: question })
             });
             const body = await response.text();
             let data = {};
+            let invalidJson = false;
             if (body.trim()) {
                 try {
                     data = JSON.parse(body);
                 } catch (parseError) {
-                    throw new Error('The app server returned an invalid response. Please restart the server and try again.');
+                    invalidJson = true;
                 }
             }
-            if (!response.ok) throw new Error(data.error || 'The mentor could not answer right now.');
+            if (!response.ok) throw new Error(getApiError(data, response));
+            if (invalidJson) {
+                throw new Error('The app server returned an invalid response. Please restart the server and try again.');
+            }
             if (typeof data.answer !== 'string' || !data.answer.trim()) {
                 throw new Error('The app server returned an empty mentor response.');
             }
@@ -125,7 +183,10 @@
             addToHistory(question, data.answer);
             status.textContent = '';
         } catch (error) {
-            status.textContent = 'AI Mentor is unavailable right now. ' + error.message;
+            const message = error instanceof TypeError
+                ? 'Could not reach the AI server. Check its URL, availability, and CORS settings.'
+                : error.message;
+            status.textContent = 'AI Mentor is unavailable right now. ' + message;
         } finally {
             submitButton.disabled = false;
             submitButton.textContent = 'Get professional guidance';
