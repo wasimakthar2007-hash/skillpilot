@@ -5,14 +5,23 @@ const multer = require('multer');
 const rateLimit = require('express-rate-limit');
 const pdfParse = require('pdf-parse');
 const mammoth = require('mammoth');
+const WordExtractor = require('word-extractor');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 dns.setDefaultResultOrder('ipv4first');
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
-const model = process.env.GOOGLE_AI_MODEL || 'gemini-3.6-flash';
+const model = process.env.GOOGLE_AI_MODEL || 'gemini-3.8-flash';
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
-const aiLimiter = rateLimit({ windowMs: 60 * 1000, limit: 20, standardHeaders: true, legacyHeaders: false });
+const aiLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    limit: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: function (req, res) {
+        res.status(429).json({ error: 'Too many AI requests. Please wait a minute and try again.' });
+    }
+});
 const allowedOrigins = new Set(
     (process.env.ALLOWED_ORIGINS || 'https://wasimakthar2007-hash.github.io,http://localhost:3000,http://localhost:3001')
         .split(',')
@@ -98,12 +107,16 @@ app.get('/api/jobs', function (req, res) {
 });
 
 async function askGoogle(prompt, useUrlContext, maxOutputTokens) {
-    if (!process.env.GOOGLE_AI_API_KEY) throw new Error('GOOGLE_AI_API_KEY is not configured on the server.');
+    const apiKey = (process.env.GOOGLE_AI_API_KEY || '').trim();
+    if (!apiKey) throw new Error('GOOGLE_AI_API_KEY is not configured on the server.');
     let response;
     try {
-        response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(process.env.GOOGLE_AI_API_KEY), {
+        response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'x-goog-api-key': apiKey
+            },
             signal: AbortSignal.timeout(45000),
             body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
@@ -123,9 +136,21 @@ async function askGoogle(prompt, useUrlContext, maxOutputTokens) {
             throw new Error('Google AI returned an invalid response (HTTP ' + response.status + ').');
         }
     }
-    if (!response.ok) throw new Error(data.error && data.error.message ? data.error.message : 'Google AI request failed.');
-    const text = data.candidates && data.candidates[0] && data.candidates[0].content &&
-        data.candidates[0].content.parts && data.candidates[0].content.parts[0].text;
+    if (!response.ok) {
+        const message = data.error && data.error.message ? data.error.message : '';
+        if ((response.status === 401 || response.status === 403 || response.status === 400) &&
+            /invalid authentication credentials|api[_ ]key.{0,30}(invalid|not valid)|invalid.{0,30}api[_ ]key|unauthenticated/i.test(message)) {
+            throw new Error('Google rejected GOOGLE_AI_API_KEY. Replace it with a Gemini API key from Google AI Studio in placement_trainer/.env (not an OAuth client ID or access token), then restart the server.');
+        }
+        if (/project has been denied access|project.{0,40}denied access/i.test(message)) {
+            throw new Error('Google denied access to the API key project. In Google AI Studio, create a key for a project permitted to use the Gemini API, then update GOOGLE_AI_API_KEY in the local .env file and restart the server. If the project is restricted, contact Google support.');
+        }
+        throw new Error(message || 'Google AI request failed (HTTP ' + response.status + ').');
+    }
+    const parts = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
+    const text = Array.isArray(parts)
+        ? parts.filter(function (part) { return part && typeof part.text === 'string'; }).map(function (part) { return part.text; }).join('\n').trim()
+        : '';
     if (!text) throw new Error('Google AI returned an empty response.');
     return text;
 }
@@ -151,7 +176,7 @@ app.post('/api/mentor', aiLimiter, async function (req, res) {
         res.json({ answer: answer });
     } catch (error) {
         const message = error.message || 'The AI mentor is temporarily unavailable.';
-        const status = message.includes('GOOGLE_AI_API_KEY') ? 503 : 502;
+        const status = message.includes('GOOGLE_AI_API_KEY') || message.includes('Google denied access') ? 503 : 502;
         res.status(status).json({ error: message });
     }
 });
@@ -160,29 +185,55 @@ async function extractResume(file) {
     const extension = path.extname(file.originalname).toLowerCase();
     if (extension === '.pdf') return (await pdfParse(file.buffer)).text;
     if (extension === '.docx') return (await mammoth.extractRawText({ buffer: file.buffer })).value;
-    if (extension === '.txt' || extension === '.doc') return file.buffer.toString('utf8');
+    if (extension === '.doc') return (await new WordExtractor().extract(file.buffer)).getBody();
+    if (extension === '.txt') return file.buffer.toString('utf8');
     throw new Error('Only PDF, DOC, DOCX, and TXT files are supported.');
 }
 
 app.post('/api/resume/analyze', aiLimiter, upload.single('resume'), async function (req, res) {
     if (!req.file) return res.status(400).json({ error: 'Please upload a resume file.' });
+    let text;
     try {
-        const text = (await extractResume(req.file)).trim();
-        if (!text) return res.status(400).json({ error: 'The uploaded resume contains no readable text.' });
-        if (text.length > 30000) return res.status(400).json({ error: 'Resume text is too long to analyze.' });
-        const role = typeof req.body.targetRole === 'string' ? req.body.targetRole.trim() : '';
+        text = (await extractResume(req.file)).trim();
+    } catch (error) {
+        return res.status(400).json({ error: 'Could not read this resume. Please upload a valid PDF, DOC, DOCX, or TXT file.' });
+    }
+    if (!text) return res.status(400).json({ error: 'The uploaded resume contains no readable text.' });
+    if (text.length > 30000) return res.status(400).json({ error: 'Resume text is too long to analyze.' });
+    const role = typeof req.body.targetRole === 'string' ? req.body.targetRole.trim().slice(0, 120) : '';
+    try {
         const analysis = await askGoogle('Review this resume for a placement candidate targeting ' + (role || 'a suitable entry-level role') + '. Give a complete, practical review using these headings: Overall verdict, Strengths, Missing or weak content, ATS improvements, Rewritten professional summary, Improved bullet examples, and Five prioritized actions. Explain each point briefly and do not invent experience.\nResume text:\n' + text, false, 2200);
         res.json({ analysis: analysis });
     } catch (error) {
-        res.status(502).json({ error: error.message });
+        const message = error.message || 'Resume analysis failed.';
+        const status = message.includes('GOOGLE_AI_API_KEY') || message.includes('Google denied access') ? 503 : 502;
+        res.status(status).json({ error: message });
     }
 });
 
+app.get('/api/health', function (req, res) {
+    res.json({ ok: true, aiConfigured: Boolean((process.env.GOOGLE_AI_API_KEY || '').trim()), model: model });
+});
+
+app.use('/api', function (req, res) {
+    res.status(404).json({ error: 'API route not found.' });
+});
+
 app.use(function (error, req, res, next) {
+    if (res.headersSent) return next(error);
     if (error instanceof SyntaxError && error.status === 400 && error.body) {
         return res.status(400).json({ error: 'The request body must contain valid JSON.' });
     }
-    next(error);
+    if (error instanceof multer.MulterError) {
+        const status = error.code === 'LIMIT_FILE_SIZE' ? 413 : 400;
+        const message = error.code === 'LIMIT_FILE_SIZE'
+            ? 'Resume files must be 5 MB or smaller.'
+            : 'The uploaded resume could not be processed.';
+        return res.status(status).json({ error: message });
+    }
+    console.error('Request failed:', error.message);
+    if (req.path.startsWith('/api/')) return res.status(500).json({ error: 'The server could not process the request.' });
+    res.status(500).send('Server error.');
 });
 
 app.listen(port, function () {

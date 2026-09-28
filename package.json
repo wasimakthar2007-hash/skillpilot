@@ -11,6 +11,10 @@
     "express-rate-limit": "^7.4.1",
     "mammoth": "^1.8.0",
     "multer": "^2.0.2",
-    "pdf-parse": "^1.1.1"
+    "pdf-parse": "^1.1.1",
+    "word-extractor": "^1.0.4"
+  },
+  "overrides": {
+    "qs": "6.16.0"
   }
 }

@@ -26,7 +26,7 @@ jobs:
 
       - name: Configure app server URL
         run: |
-          node -e "require('fs').writeFileSync('api-config.js', 'window.SKILLPILOT_API_BASE_URL = ' + JSON.stringify(process.env.SKILLPILOT_API_BASE_URL || '') + ';\\n')"
+          node -e 'const fs = require("fs"); const baseUrl = (process.env.SKILLPILOT_API_BASE_URL || "").trim().replace(/\/+$/, ""); if (!baseUrl) throw new Error("Set the SKILLPILOT_API_BASE_URL Actions variable to the deployed API URL."); const url = new URL(baseUrl); if (url.protocol !== "https:") throw new Error("SKILLPILOT_API_BASE_URL must use HTTPS."); fs.writeFileSync("api-config.js", "window.SKILLPILOT_API_BASE_URL = " + JSON.stringify(baseUrl) + ";\n");'
         env:
           SKILLPILOT_API_BASE_URL: ${{ vars.SKILLPILOT_API_BASE_URL }}
 

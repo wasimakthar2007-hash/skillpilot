@@ -20,12 +20,52 @@
         apiUrlInput.value = localStorage.getItem(API_OVERRIDE_KEY) || window.SKILLPILOT_API_BASE_URL || '';
     }
 
+    function getApiError(data, response, invalidJson) {
+        const apiError = data && data.error;
+        const message = typeof apiError === 'string'
+            ? apiError
+            : apiError && typeof apiError.message === 'string'
+                ? apiError.message
+                : data && typeof data.message === 'string'
+                    ? data.message
+                    : '';
+        if (response.status === 404 || response.status === 405) {
+            return "The configured server does not provide POST /api/resume/analyze. Deploy this project's server.js as a web service, set its base URL here (or in GitHub Actions as SKILLPILOT_API_BASE_URL), then retry.";
+        }
+        if (message) return message;
+        if (invalidJson) {
+            return 'The app server returned an invalid response (HTTP ' + response.status + '). Check that the API URL points to the Skill Pilot server.';
+        }
+        return 'The app server returned HTTP ' + response.status + (response.statusText ? ' ' + response.statusText : '') + ' without an error message.';
+    }
+
     if (apiUrlInput) {
         updateApiInputFromStorage();
         saveApiBtn.addEventListener('click', function () {
             const val = (apiUrlInput.value || '').trim().replace(/\/+$/, '');
-            if (val) localStorage.setItem(API_OVERRIDE_KEY, val); else localStorage.removeItem(API_OVERRIDE_KEY);
-            status.textContent = 'Saved API base URL override.';
+            if (!val) {
+                localStorage.removeItem(API_OVERRIDE_KEY);
+                status.textContent = 'Cleared the API URL override.';
+                return;
+            }
+            let parsedUrl;
+            try {
+                parsedUrl = new URL(val);
+            } catch (error) {
+                status.textContent = 'Enter a valid API base URL, for example https://your-service.onrender.com.';
+                return;
+            }
+            if (parsedUrl.protocol !== 'https:' && !(parsedUrl.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(parsedUrl.hostname))) {
+                status.textContent = 'Use an HTTPS API URL (HTTP is allowed only for localhost testing).';
+                return;
+            }
+            if (parsedUrl.pathname !== '/' || parsedUrl.search || parsedUrl.hash) {
+                status.textContent = 'Enter only the API base URL, without a path such as /api/resume/analyze.';
+                return;
+            }
+            localStorage.setItem(API_OVERRIDE_KEY, parsedUrl.origin);
+            apiUrlInput.value = parsedUrl.origin;
+            status.textContent = 'Saved API URL for Resume Builder and AI Mentor.';
         });
         clearApiBtn.addEventListener('click', function () {
             localStorage.removeItem(API_OVERRIDE_KEY);
@@ -88,14 +128,18 @@
             const response = await fetch(url, { method: 'POST', body: formData });
             const body = await response.text();
             let data = {};
+            let invalidJson = false;
             if (body.trim()) {
                 try {
                     data = JSON.parse(body);
                 } catch (parseError) {
-                    throw new Error('The app server returned an invalid response (HTTP ' + response.status + '). Please restart the server and try again.');
+                    invalidJson = true;
                 }
             }
-            if (!response.ok) throw new Error(typeof data.error === 'string' ? data.error : 'Resume analysis failed.');
+            if (!response.ok) throw new Error(getApiError(data, response, invalidJson));
+            if (invalidJson) {
+                throw new Error('The app server returned an invalid response. Check that the API URL points to the Skill Pilot server.');
+            }
             if (typeof data.analysis !== 'string' || !data.analysis.trim()) {
                 throw new Error('The app server returned an empty resume analysis.');
             }
