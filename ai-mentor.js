@@ -50,28 +50,34 @@
     const apiUrlInput = document.getElementById('mentor-api-url');
     const saveApiBtn = document.getElementById('save-api-url');
     const clearApiBtn = document.getElementById('clear-api-url');
-    const API_OVERRIDE_KEY = 'pt_api_base_url_override';
-
     function getApiBaseUrl() {
-        const override = (localStorage.getItem(API_OVERRIDE_KEY) || '').trim().replace(/\/+$|\s+$/g, '');
-        if (override) return override;
-        return String(window.SKILLPILOT_API_BASE_URL || '').replace(/\/+$/, '');
+        return window.SkillPilotApiUrl.get();
     }
 
     function updateApiInputFromStorage() {
         if (!apiUrlInput) return;
-        apiUrlInput.value = localStorage.getItem(API_OVERRIDE_KEY) || window.SKILLPILOT_API_BASE_URL || '';
+        apiUrlInput.value = window.SkillPilotApiUrl.get();
     }
 
     if (apiUrlInput) {
         updateApiInputFromStorage();
-        saveApiBtn.addEventListener('click', function () {
-            const val = (apiUrlInput.value || '').trim().replace(/\/+$/, '');
-            if (val) localStorage.setItem(API_OVERRIDE_KEY, val); else localStorage.removeItem(API_OVERRIDE_KEY);
-            status.textContent = 'Saved API base URL override.';
+        saveApiBtn.addEventListener('click', async function () {
+            const val = (apiUrlInput.value || '').trim();
+            saveApiBtn.disabled = true;
+            status.textContent = 'Checking Skill Pilot API and Resume Builder route...';
+            try {
+                const verifiedUrl = await window.SkillPilotApiUrl.verify(val);
+                window.SkillPilotApiUrl.save(verifiedUrl);
+                apiUrlInput.value = verifiedUrl;
+                status.textContent = 'Verified and saved the Skill Pilot API URL for AI Mentor and Resume Builder.';
+            } catch (error) {
+                status.textContent = error.message;
+            } finally {
+                saveApiBtn.disabled = false;
+            }
         });
         clearApiBtn.addEventListener('click', function () {
-            localStorage.removeItem(API_OVERRIDE_KEY);
+            window.SkillPilotApiUrl.clear();
             updateApiInputFromStorage();
             status.textContent = 'Cleared API base URL override.';
         });
@@ -123,10 +129,10 @@
                 ? apiError.message
                 : '';
         if (response.status === 405) {
-            return 'The AI request reached a server that does not support the Mentor endpoint. Set SKILLPILOT_API_BASE_URL to your deployed Skill Pilot API URL, then redeploy the site.';
+            return 'The configured API URL points to a server without the AI Mentor endpoint. Verify and save the deployed Skill Pilot API URL above.';
         }
-        if (response.status === 404 && /No route for POST \/api\/mentor/i.test(message)) {
-            return 'The configured AI server does not provide the AI Mentor endpoint. Set SKILLPILOT_API_BASE_URL to the Render service running this project, then redeploy the site.';
+        if (response.status === 404) {
+            return 'The configured API URL points to a server without the AI Mentor endpoint. Deploy this repository’s server.js, then verify and save its base URL above.';
         }
         if (message) return message;
         return 'The AI server returned HTTP ' + response.status + ' without an error message.';

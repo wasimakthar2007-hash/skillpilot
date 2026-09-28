@@ -7,17 +7,13 @@
     const apiUrlInput = document.getElementById('resume-api-url');
     const saveApiBtn = document.getElementById('resume-save-api-url');
     const clearApiBtn = document.getElementById('resume-clear-api-url');
-    const API_OVERRIDE_KEY = 'pt_api_base_url_override';
-
     function getApiBaseUrl() {
-        const override = (localStorage.getItem(API_OVERRIDE_KEY) || '').trim().replace(/\/+$/g, '');
-        if (override) return override;
-        return String(window.SKILLPILOT_API_BASE_URL || '').replace(/\/+$/, '');
+        return window.SkillPilotApiUrl.get();
     }
 
     function updateApiInputFromStorage() {
         if (!apiUrlInput) return;
-        apiUrlInput.value = localStorage.getItem(API_OVERRIDE_KEY) || window.SKILLPILOT_API_BASE_URL || '';
+        apiUrlInput.value = window.SkillPilotApiUrl.get();
     }
 
     function getApiError(data, response, invalidJson) {
@@ -30,7 +26,7 @@
                     ? data.message
                     : '';
         if (response.status === 404 || response.status === 405) {
-            return "The configured server does not provide POST /api/resume/analyze. Deploy this project's server.js as a web service, set its base URL here (or in GitHub Actions as SKILLPILOT_API_BASE_URL), then retry.";
+            return "The configured API URL points to a server without POST /api/resume/analyze. Deploy this repository's server.js, then verify and save the Skill Pilot API base URL above.";
         }
         if (message) return message;
         if (invalidJson) {
@@ -41,34 +37,23 @@
 
     if (apiUrlInput) {
         updateApiInputFromStorage();
-        saveApiBtn.addEventListener('click', function () {
-            const val = (apiUrlInput.value || '').trim().replace(/\/+$/, '');
-            if (!val) {
-                localStorage.removeItem(API_OVERRIDE_KEY);
-                status.textContent = 'Cleared the API URL override.';
-                return;
-            }
-            let parsedUrl;
+        saveApiBtn.addEventListener('click', async function () {
+            const val = (apiUrlInput.value || '').trim();
+            saveApiBtn.disabled = true;
+            status.textContent = 'Checking Skill Pilot API and Resume Builder route...';
             try {
-                parsedUrl = new URL(val);
+                const verifiedUrl = await window.SkillPilotApiUrl.verify(val);
+                window.SkillPilotApiUrl.save(verifiedUrl);
+                apiUrlInput.value = verifiedUrl;
+                status.textContent = 'Verified and saved the Skill Pilot API URL for Resume Builder and AI Mentor.';
             } catch (error) {
-                status.textContent = 'Enter a valid API base URL, for example https://your-service.onrender.com.';
-                return;
+                status.textContent = error.message;
+            } finally {
+                saveApiBtn.disabled = false;
             }
-            if (parsedUrl.protocol !== 'https:' && !(parsedUrl.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(parsedUrl.hostname))) {
-                status.textContent = 'Use an HTTPS API URL (HTTP is allowed only for localhost testing).';
-                return;
-            }
-            if (parsedUrl.pathname !== '/' || parsedUrl.search || parsedUrl.hash) {
-                status.textContent = 'Enter only the API base URL, without a path such as /api/resume/analyze.';
-                return;
-            }
-            localStorage.setItem(API_OVERRIDE_KEY, parsedUrl.origin);
-            apiUrlInput.value = parsedUrl.origin;
-            status.textContent = 'Saved API URL for Resume Builder and AI Mentor.';
         });
         clearApiBtn.addEventListener('click', function () {
-            localStorage.removeItem(API_OVERRIDE_KEY);
+            window.SkillPilotApiUrl.clear();
             updateApiInputFromStorage();
             status.textContent = 'Cleared API base URL override.';
         });
